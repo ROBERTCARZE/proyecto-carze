@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Portada | CARZE Contratistas Generales S.A.C.</title>
+    
+    <!-- Vinculación del script del menú flotante -->
+    <script src="menu_flotante.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body { 
+            height: 100vh; 
+            /* Fondo corporativo configurado */
+            background: url('img/fondo_portada.png') no-repeat center center fixed; 
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Alinea los botones al final */
+            padding: 40px;
+        }
+
+        /* BOTONES (MANTENIDOS IGUALES) */
+        .nav-buttons {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-flex;
+            gap: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            align-self: flex-start;
+        }
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Botones (Posición y estilo preservados) -->
+    <div class="nav-buttons">
+        <!-- Llamada al menú flotante al hacer clic -->
+        <a href="#" onclick="crearMenuFlotante(); return false;">PANEL DE CONTROL ⚙</a>
+        <a href="#">DASHBOARD ⊞</a>
+        <a href="1. LOGIN.html">SALIR ⏻</a>
+    </div>
+
+</body>
+</html>
