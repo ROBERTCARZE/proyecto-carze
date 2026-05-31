@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso | CARZE Contratistas Generales S.A.C.</title>
+    <style>
+        /* RESET Y ESTILOS BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { height: 100vh; display: flex; overflow: hidden; }
+
+        /* PANEL IZQUIERDO: INDUSTRIAL DESIGN */
+        .panel-logo {
+            flex: 1;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-image: radial-gradient(#334155 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+        }
+        .panel-logo img {
+            max-width: 65%;
+            height: auto;
+            filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.4));
+        }
+
+        /* PANEL DERECHO: FORMULARIO */
+        .panel-login {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+        }
+        .login-box { width: 80%; max-width: 400px; }
+        .login-box h2 { color: #1e293b; margin-bottom: 25px; font-size: 1.8rem; font-weight: 700; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.9rem; }
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus { border-color: #f97316; outline: none; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+        
+        .btn-ingresar {
+            width: 100%;
+            padding: 14px;
+            background-color: #f97316;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-ingresar:hover { background-color: #ea580c; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); }
+    </style>
+</head>
+<body>
+
+    <!-- Panel Izquierdo: Branding -->
+    <div class="panel-logo">
+        <img src="img/logo_carze_2.png" alt="Logo CARZE">
+    </div>
+
+    <!-- Panel Derecho: Acceso -->
+    <div class="panel-login">
+        <div class="login-box">
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm" onsubmit="validarAcceso(event);">
+                <div class="input-group">
+                    <label>Usuario</label>
+                    <input type="text" id="usuario" placeholder="Ingrese su usuario" required>
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-ingresar">INGRESAR</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lógica de Redirección -->
+    <script>
+        function validarAcceso(event) {
+            event.preventDefault(); // Previene el comportamiento por defecto del formulario
+            
+            // Mensaje de confirmación antes de entrar
+            alert("Bienvenido al sistema de gestión, CARZE Contratistas Generales S.A.C.");
+            
+            // Redirección a la Portada en la misma carpeta
+            window.location.href = "2. PORTADA.html";
+        }
+    </script>
+</body>
+</html>
