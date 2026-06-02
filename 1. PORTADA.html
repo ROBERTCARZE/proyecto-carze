@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Portada | CARZE Contratistas Generales S.A.C.</title>
+    <script src="carze_session.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body {
+            height: 100vh;
+            background: url('img/fondo_portada.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 40px;
+        }
+
+        /* ── OVERLAY DE ENTRADA ─────────────────────────── */
+        #entry-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #0a0f1e;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            animation: entryFadeOut 0.6s ease 1.6s forwards;
+        }
+        @keyframes entryFadeOut {
+            from { opacity: 1; }
+            to   { opacity: 0; pointer-events: none; }
+        }
+
+        /* Barrido horizontal que revela la página */
+        #entry-overlay::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, #f97316 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: scanSweep 0.9s ease 0.3s both;
+            opacity: 0.25;
+        }
+        @keyframes scanSweep {
+            from { background-position: -100% 0; }
+            to   { background-position: 200% 0; }
+        }
+
+        /* Grid de fondo del overlay */
+        #entry-overlay .e-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(249,115,22,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(249,115,22,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Logo + texto en el centro del overlay */
+        .entry-center {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 16px;
+            animation: entryCenterFade 0.5s ease 1.2s forwards;
+            opacity: 1;
+        }
+        @keyframes entryCenterFade { to { opacity: 0; transform: scale(1.08); } }
+
+        .entry-badge {
+            background: rgba(249,115,22,0.15);
+            border: 1px solid rgba(249,115,22,0.4);
+            border-radius: 8px;
+            padding: 6px 18px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #f97316;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            animation: blink 0.5s step-end 3;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .entry-user-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 30px rgba(249,115,22,0.5);
+        }
+
+        /* Cuerpo principal: aparece desde abajo después del overlay */
+        body > *:not(#entry-overlay) {
+            animation: bodyReveal 0.5s cubic-bezier(0.22,1,0.36,1) 1.9s both;
+        }
+        @keyframes bodyReveal {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .nav-buttons {
+            background: rgba(0,0,0,0.65);
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-flex;
+            gap: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            align-self: flex-start;
+            backdrop-filter: blur(8px);
+        }
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-buttons a:hover { color: #f97316; }
+
+        /* Badge usuario arriba */
+        .user-badge {
+            position: fixed;
+            top: 20px; left: 20px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(8px);
+        }
+        .user-avatar {
+            width: 36px; height: 36px;
+            background: #1a3a6b;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.82rem; color: white; flex-shrink: 0;
+        }
+        .user-nombre { font-size: 0.85rem; font-weight: 700; color: white; }
+        .user-rol    { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top:1px; }
+        .online-dot  { width:8px; height:8px; background:#16a34a; border-radius:50%; animation:pulso 2s ease-in-out infinite; }
+        .online-txt  { font-size:0.72rem; color:#4ade80; font-weight:600; }
+        @keyframes pulso{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+    </style>
+</head>
+<body>
+
+    <!-- OVERLAY DE ENTRADA -->
+    <div id="entry-overlay">
+        <div class="e-grid"></div>
+        <div class="entry-center">
+            <div class="entry-badge">✔ &nbsp; ACCESO CONCEDIDO</div>
+            <div class="entry-user-name" id="entry-user-name">Bienvenido</div>
+        </div>
+    </div>
+
+    <!-- Badge usuario -->
+    <div class="user-badge">
+        <div class="user-avatar" id="portada-iniciales">RC</div>
+        <div>
+            <div class="user-nombre" id="portada-nombre">Cargando...</div>
+            <div class="user-rol"    id="portada-rol"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;margin-left:6px;">
+            <div class="online-dot"></div>
+            <span class="online-txt">En línea</span>
+        </div>
+    </div>
+
+    <!-- Botones navegación -->
+    <div class="nav-buttons">
+        <a href="1. DASHBORD.html">PANEL DE CONTROL ⚙</a>
+        <a href="1. DASHBORD.html">DASHBOARD ⊞</a>
+        <a href="#" onclick="carze_cerrarSesion(); return false;">SALIR ⏻</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            var nombre    = carze_getUsuario();
+            var rol       = carze_getRol();
+            var iniciales = carze_getIniciales();
+            document.getElementById('portada-iniciales').textContent = iniciales;
+            document.getElementById('portada-nombre').textContent    = nombre;
+            document.getElementById('portada-rol').textContent       = rol;
+            // Nombre en overlay de entrada
+            var entryName = document.getElementById('entry-user-name');
+            if (entryName && nombre) entryName.textContent = nombre;
+        });
+    </script>
+</body>
+</html>
