@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizaciones | CARZE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --sidebar-w: 220px;
+            --bg:        #f0f2f5;
+            --white:     #ffffff;
+            --dark:      #1a1f36;
+            --naranja:   #f97316;
+            --naranja2:  #ea580c;
+            --azul:      #1a3a6b;
+            --azul2:     #1e40af;
+            --border:    #e4e8ef;
+            --txt:       #1e293b;
+            --muted:     #64748b;
+            --light:     #f8fafc;
+
+            --pend-bg: #fffbeb; --pend-border: #fde68a; --pend-icon: #f59e0b; --pend-txt: #92400e;
+            --fact-bg: #f0fdf4; --fact-border: #bbf7d0; --fact-icon: #16a34a; --fact-txt: #14532d;
+            --anul-bg: #faf5ff; --anul-border: #e9d5ff; --anul-icon: #9333ea; --anul-txt: #581c87;
+            --obs-bg:  #fff1f2; --obs-border:  #fecdd3; --obs-icon:  #dc2626; --obs-txt:  #7f1d1d;
+        }
+
+        html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--txt); overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-w);
+            background: #0d1630;
+            border-right: 1px solid rgba(255,255,255,0.07);
+            display: flex; flex-direction: column;
+            z-index: 50; overflow-y: auto; scrollbar-width: none;
+        }
+        .sidebar::-webkit-scrollbar { display: none; }
+
+        .sidebar-logo {
+            padding: 18px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .sidebar-logo img { width: 120px; }
+        .sidebar-logo span { font-size: 0.58rem; color: rgba(255,255,255,0.3); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
+
+        .sidebar-nav { padding: 14px 10px; flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 12px; border-radius: 9px; cursor: pointer;
+            text-decoration: none; color: rgba(255,255,255,0.45);
+            font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em;
+            text-transform: uppercase; transition: all 0.18s; margin-bottom: 2px;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(249,115,22,0.18), rgba(249,115,22,0.06));
+            color: var(--naranja); border-left: 3px solid var(--naranja); padding-left: 9px;
+        }
+        .nav-item .nav-icon { font-size: 1.05rem; flex-shrink: 0; width: 22px; text-align: center; }
+
+        /* MAIN */
+        .main { margin-left: var(--sidebar-w); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        .topbar {
+            background: var(--white); border-bottom: 1px solid var(--border);
+            padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+        .topbar-left h1 { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--naranja); }
+        .topbar-left p  { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+        .user-badge {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--light); border: 1px solid var(--border);
+            border-radius: 50px; padding: 6px 14px 6px 8px;
+        }
+        .user-avatar {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, var(--naranja), var(--naranja2));
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 800; color: white;
+        }
+        .user-name { font-size: 0.75rem; font-weight: 700; color: var(--txt); }
+
+        .content { flex: 1; overflow-y: auto; padding: 24px 28px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+        /* ACTION BAR */
+        .action-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+        .search-wrap { flex: 1; min-width: 220px; max-width: 380px; position: relative; }
+        .search-wrap input {
+            width: 100%; padding: 9px 14px 9px 36px;
+            border: 1.5px solid var(--border); border-radius: 9px;
+            font-size: 0.82rem; font-family: inherit; color: var(--txt); background: var(--white); transition: all 0.2s;
+        }
+        .search-wrap input:focus { outline: none; border-color: var(--naranja); box-shadow: 0 0 0 3px rgba(249,115,22,0.08); }
+        .search-wrap input::placeholder { color: var(--muted); }
+        .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+        .btn {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 18px; border: none; border-radius: 9px;
+            font-family: inherit; font-size: 0.8rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap; letter-spacing: 0.03em;
+        }
+        .btn-primary { background: var(--azul); color: white; }
+        .btn-primary:hover { background: var(--azul2); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,58,107,0.3); }
+        .btn-edit { background: var(--naranja); color: white; }
+        .btn-edit:hover { background: var(--naranja2); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(249,115,22,0.35); }
+        .btn-pdf { background: #dc2626; color: white; }
+        .btn-pdf:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,0.3); }
+
+        /* STATUS CARDS */
+        .status-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+
+        .status-card {
+            background: var(--white); border: 1.5px solid var(--border); border-radius: 14px;
+            padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+            transition: transform 0.2s, box-shadow 0.2s; animation: fadeUp 0.4s ease both;
+        }
+        .status-card:nth-child(1){ animation-delay:0.05s; border-color:var(--pend-border); background:var(--pend-bg); }
+        .status-card:nth-child(2){ animation-delay:0.1s;  border-color:var(--fact-border); background:var(--fact-bg); }
+        .status-card:nth-child(3){ animation-delay:0.15s; border-color:var(--anul-border); background:var(--anul-bg); }
+        .status-card:nth-child(4){ animation-delay:0.2s;  border-color:var(--obs-border);  background:var(--obs-bg);  }
+        .status-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+
+        .status-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+        .status-card:nth-child(1) .status-icon { background:var(--pend-icon); }
+        .status-card:nth-child(2) .status-icon { background:var(--fact-icon); }
+        .status-card:nth-child(3) .status-icon { background:var(--anul-icon); }
+        .status-card:nth-child(4) .status-icon { background:var(--obs-icon);  }
+
+        .status-label { font-size:0.62rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+        .status-card:nth-child(1) .status-label { color:var(--pend-txt); }
+        .status-card:nth-child(2) .status-label { color:var(--fact-txt); }
+        .status-card:nth-child(3) .status-label { color:var(--anul-txt); }
+        .status-card:nth-child(4) .status-label { color:var(--obs-txt);  }
+
+        .status-count { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; line-height:1; margin-bottom:2px; }
+        .status-card:nth-child(1) .status-count { color:var(--pend-icon); }
+        .status-card:nth-child(2) .status-count { color:var(--fact-icon); }
+        .status-card:nth-child(3) .status-count { color:var(--anul-icon); }
+        .status-card:nth-child(4) .status-count { color:var(--obs-icon);  }
+
+        .status-amount { font-size:0.72rem; font-weight:700; color:var(--muted); }
+
+        /* TABLA */
+        .table-wrap { background:var(--white); border:1px solid var(--border); border-radius:14px; overflow:hidden; animation:fadeUp 0.4s ease 0.25s both; }
+
+        .table-header-bar { padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+        .table-header-bar span { font-size:0.75rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+        .table-count { background:var(--light); border:1px solid var(--border); border-radius:20px; padding:3px 10px; font-size:0.68rem; font-weight:700; color:var(--muted); }
+
+        .table-scroll { overflow-x: auto; }
+
+        table { width:100%; border-collapse:collapse; min-width:1100px; }
+
+        thead tr { background: var(--azul); }
+        thead th { padding:11px 12px; text-align:left; font-size:0.68rem; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase; letter-spacing:0.07em; white-space:nowrap; }
+        thead th:first-child { padding-left:18px; }
+        thead th:last-child  { padding-right:18px; }
+
+        tbody tr { border-bottom:1px solid var(--border); transition:background 0.15s; }
+        tbody tr:last-child { border-bottom:none; }
+        tbody tr:hover { background:#f8fafc; }
+
+        tbody td { padding:11px 12px; font-size:0.78rem; color:var(--txt); white-space:nowrap; }
+        tbody td:first-child { padding-left:18px; font-weight:700; color:var(--azul); }
+        tbody td:last-child  { padding-right:18px; }
+
+        .pill { display:inline-flex; align-items:center; gap:4px; font-size:0.63rem; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.06em; }
+        .pill-dot { width:5px; height:5px; border-radius:50%; }
+        .pill.pendiente { background:var(--pend-bg); color:var(--pend-txt); border:1px solid var(--pend-border); }
+        .pill.facturado { background:var(--fact-bg); color:var(--fact-txt); border:1px solid var(--fact-border); }
+        .pill.anulado   { background:var(--anul-bg); color:var(--anul-txt); border:1px solid var(--anul-border); }
+        .pill.observado { background:var(--obs-bg);  color:var(--obs-txt);  border:1px solid var(--obs-border);  }
+        .pill.pendiente .pill-dot { background:var(--pend-icon); }
+        .pill.facturado .pill-dot { background:var(--fact-icon); }
+        .pill.anulado   .pill-dot { background:var(--anul-icon); }
+        .pill.observado .pill-dot { background:var(--obs-icon);  }
+
+        .empty-state { padding:60px 20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; }
+        .empty-state .empty-img { font-size:3.5rem; opacity:0.3; }
+        .empty-state p { font-size:0.82rem; color:var(--muted); max-width:260px; line-height:1.6; }
+
+        .mascota { position:fixed; bottom:0; left:calc(var(--sidebar-w) + 16px); width:90px; pointer-events:none; z-index:10; opacity:0.85; }
+
+        .btn-logout { display:flex; align-items:center; gap:7px; padding:8px 16px; border:1.5px solid #fecaca; border-radius:9px; background:transparent; color:#dc2626; font-family:inherit; font-size:0.78rem; font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+        .btn-logout:hover { background:#dc2626; color:white; border-color:#dc2626; }
+
+        @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <img src="img/logo_carze_1.png" alt="CARZE">
+        <span>Contratistas Generales</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="cotizaciones.html" class="nav-item active"><span class="nav-icon">📋</span> Cotizaciones</a>
+        <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span> Certificados</a>
+        <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span> Facturas</a>
+        <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span> Impuestos</a>
+        <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span> Personal</a>
+        <a href="finanzas.html"     class="nav-item"><span class="nav-icon">💰</span> Finanzas</a>
+        <a href="pronto_pago.html"  class="nav-item"><span class="nav-icon">⏰</span> Pronto Pago</a>
+        <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span> Caja Diaria</a>
+        <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span> Flujo de Caja</a>
+        <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span> Vencimiento y Alertas</a>
+        <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span> Seguimiento</a>
+    </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1>Gestión de Cotizaciones</h1>
+            <p>CARZE Contratistas Generales S.A.C.</p>
+        </div>
+        <div class="topbar-right" style="display:flex;align-items:center;gap:10px;">
+            <div class="user-badge">
+                <div class="user-avatar" id="avatarInitials">?</div>
+                <span class="user-name" id="userName">Usuario</span>
+            </div>
+            <button class="btn btn-logout" onclick="cerrarSesion()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- Acciones -->
+        <div class="action-bar">
+            <div class="search-wrap">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="searchInput" placeholder="Buscar por N°, OC o Factura..." oninput="filtrarTabla()">
+            </div>
+            <div style="flex:1"></div>
+            <button class="btn btn-primary" id="btnIngresar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Ingresar
+            </button>
+            <button class="btn btn-edit" id="btnEditar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar
+            </button>
+            <button class="btn btn-pdf" id="btnPDF">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                PDF
+            </button>
+        </div>
+
+        <!-- Tarjetas estado -->
+        <div class="status-cards">
+            <div class="status-card">
+                <div class="status-icon">⏳</div>
+                <div class="status-body">
+                    <div class="status-label">Pendiente</div>
+                    <div class="status-count" id="cnt-pendiente">0</div>
+                    <div class="status-amount" id="mnt-pendiente">S/ 0</div>
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-icon">✅</div>
+                <div class="status-body">
+                    <div class="status-label">Facturado</div>
+                    <div class="status-count" id="cnt-facturado">0</div>
+                    <div class="status-amount" id="mnt-facturado">S/ 0</div>
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-icon">🚫</div>
+                <div class="status-body">
+                    <div class="status-label">Anulado</div>
+                    <div class="status-count" id="cnt-anulado">0</div>
+                    <div class="status-amount" id="mnt-anulado">S/ 0</div>
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-icon">⚠️</div>
+                <div class="status-body">
+                    <div class="status-label">Observado</div>
+                    <div class="status-count" id="cnt-observado">0</div>
+                    <div class="status-amount" id="mnt-observado">S/ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-wrap">
+            <div class="table-header-bar">
+                <span>Registros</span>
+                <span class="table-count" id="tableCount">0 registros</span>
+            </div>
+            <div class="table-scroll">
+                <table id="tablaCotizaciones">
+                    <thead>
+                        <tr>
+                            <th>N°</th><th>Fecha</th><th>Zona</th><th>Cliente</th>
+                            <th>Descripción</th><th>Cotización</th><th>Informe</th>
+                            <th>Acta</th><th>Guía</th><th>O.C.</th><th>HES</th>
+                            <th>Factura</th><th>Sub Total</th><th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody"></tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="emptyState">
+                <div class="empty-img">📋</div>
+                <p>No hay cotizaciones registradas aún. Usa el botón <strong>+ Ingresar</strong> para agregar la primera.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- MASCOTA -->
+<img src="img/mascota.png" alt="" class="mascota" onerror="this.style.display='none'">
+
+<script>
+    (function(){
+        if (sessionStorage.getItem('carze_logged') !== 'true') window.location.replace('index.html');
+    })();
+
+    window.addEventListener('DOMContentLoaded', function(){
+        var nombre = sessionStorage.getItem('carze_nombre') || 'Usuario';
+        document.getElementById('userName').textContent = nombre;
+        var ini = nombre.split(' ').map(function(p){ return p[0]; }).slice(0,2).join('').toUpperCase();
+        document.getElementById('avatarInitials').textContent = ini || 'U';
+        renderTabla([]);
+        actualizarContadores([]);
+    });
+
+    var cotizaciones = [];
+
+    function renderTabla(data) {
+        var tbody = document.getElementById('tablaBody');
+        var empty = document.getElementById('emptyState');
+        var count = document.getElementById('tableCount');
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+            empty.style.display = 'flex';
+            count.textContent = '0 registros';
+            return;
+        }
+        empty.style.display = 'none';
+        count.textContent = data.length + ' registro' + (data.length !== 1 ? 's' : '');
+        data.forEach(function(row) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td>' + esc(row.num)         + '</td>' +
+                '<td>' + esc(row.fecha)       + '</td>' +
+                '<td>' + esc(row.zona)        + '</td>' +
+                '<td>' + esc(row.cliente)     + '</td>' +
+                '<td>' + esc(row.descripcion) + '</td>' +
+                '<td>' + esc(row.cotizacion)  + '</td>' +
+                '<td>' + esc(row.informe)     + '</td>' +
+                '<td>' + esc(row.acta)        + '</td>' +
+                '<td>' + esc(row.guia)        + '</td>' +
+                '<td>' + esc(row.oc)          + '</td>' +
+                '<td>' + esc(row.hes)         + '</td>' +
+                '<td>' + esc(row.factura)     + '</td>' +
+                '<td>S/ ' + esc(row.subtotal) + '</td>' +
+                '<td>' + pillEstado(row.estado) + '</td>';
+            tbody.appendChild(tr);
+        });
+    }
+
+    function pillEstado(estado) {
+        var e = (estado || '').toLowerCase();
+        var cls = { pendiente:'pendiente', facturado:'facturado', anulado:'anulado', observado:'observado' }[e] || 'pendiente';
+        return '<span class="pill ' + cls + '"><span class="pill-dot"></span>' + esc(estado) + '</span>';
+    }
+
+    function esc(v) { return v !== undefined && v !== null ? String(v).replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—'; }
+
+    function actualizarContadores(data) {
+        var est = { pendiente:{cnt:0,mnt:0}, facturado:{cnt:0,mnt:0}, anulado:{cnt:0,mnt:0}, observado:{cnt:0,mnt:0} };
+        data.forEach(function(r) {
+            var e = (r.estado||'').toLowerCase();
+            if (est[e]) { est[e].cnt++; est[e].mnt += parseFloat(r.subtotal)||0; }
+        });
+        ['pendiente','facturado','anulado','observado'].forEach(function(k) {
+            document.getElementById('cnt-' + k).textContent = est[k].cnt;
+            document.getElementById('mnt-' + k).textContent = 'S/ ' + est[k].mnt.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+        });
+    }
+
+    function filtrarTabla() {
+        var q = document.getElementById('searchInput').value.toLowerCase().trim();
+        var filtrado = q ? cotizaciones.filter(function(r){ return Object.values(r).some(function(v){ return String(v).toLowerCase().includes(q); }); }) : cotizaciones;
+        renderTabla(filtrado);
+    }
+
+    function cerrarSesion() {
+        sessionStorage.removeItem('carze_logged');
+        sessionStorage.removeItem('carze_nombre');
+        sessionStorage.removeItem('carze_rol');
+        window.location.replace('index.html');
+    }
+</script>
+
+</body>
+</html>
