@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizaciones | CARZE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px; --bg:#f0f2f5; --white:#fff; --naranja:#f97316; --naranja2:#ea580c;
+  --azul:#1a3a6b; --azul2:#1e40af; --border:#e4e8ef; --txt:#1e293b; --muted:#64748b; --light:#f8fafc;
+  --pend-bg:#fffbeb;--pend-border:#fde68a;--pend-icon:#f59e0b;--pend-txt:#92400e;
+  --fact-bg:#f0fdf4;--fact-border:#bbf7d0;--fact-icon:#16a34a;--fact-txt:#14532d;
+  --anul-bg:#faf5ff;--anul-border:#e9d5ff;--anul-icon:#9333ea;--anul-txt:#581c87;
+  --obs-bg:#fff1f2;--obs-border:#fecdd3;--obs-icon:#dc2626;--obs-txt:#7f1d1d;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sidebar-logo img{width:115px}
+.sidebar-logo span{font-size:0.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:var(--light);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.1),rgba(249,115,22,.04));color:var(--naranja);border-left:3px solid var(--naranja);padding-left:9px}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:22px 28px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* ── ACTION BAR ── */
+.action-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:200px;max-width:360px;position:relative}
+.search-wrap input{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:9px;font-size:.81rem;font-family:inherit;color:var(--txt);background:var(--white);transition:all .2s}
+.search-wrap input:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.03em}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{background:var(--azul2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,58,107,.3)}
+.btn-edit{background:var(--naranja);color:#fff}
+.btn-edit:hover{background:var(--naranja2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.35)}
+.btn-pdf{background:#dc2626;color:#fff}
+.btn-pdf:hover{background:#b91c1c;transform:translateY(-1px);box-shadow:0 4px 14px rgba(220,38,38,.3)}
+
+/* ── STATUS CARDS ── */
+.status-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sc{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:15px 17px;display:flex;align-items:center;gap:13px;transition:transform .2s,box-shadow .2s;animation:fadeUp .4s ease both}
+.sc:nth-child(1){animation-delay:.05s;border-color:var(--pend-border);background:var(--pend-bg)}
+.sc:nth-child(2){animation-delay:.1s;border-color:var(--fact-border);background:var(--fact-bg)}
+.sc:nth-child(3){animation-delay:.15s;border-color:var(--anul-border);background:var(--anul-bg)}
+.sc:nth-child(4){animation-delay:.2s;border-color:var(--obs-border);background:var(--obs-bg)}
+.sc:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.07)}
+.sc-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.sc:nth-child(1) .sc-icon{background:var(--pend-icon)}
+.sc:nth-child(2) .sc-icon{background:var(--fact-icon)}
+.sc:nth-child(3) .sc-icon{background:var(--anul-icon)}
+.sc:nth-child(4) .sc-icon{background:var(--obs-icon)}
+.sc-label{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.sc:nth-child(1) .sc-label{color:var(--pend-txt)}
+.sc:nth-child(2) .sc-label{color:var(--fact-txt)}
+.sc:nth-child(3) .sc-label{color:var(--anul-txt)}
+.sc:nth-child(4) .sc-label{color:var(--obs-txt)}
+.sc-count{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:2px}
+.sc:nth-child(1) .sc-count{color:var(--pend-icon)}
+.sc:nth-child(2) .sc-count{color:var(--fact-icon)}
+.sc:nth-child(3) .sc-count{color:var(--anul-icon)}
+.sc:nth-child(4) .sc-count{color:var(--obs-icon)}
+.sc-amount{font-size:.7rem;font-weight:700;color:var(--muted)}
+
+/* ── TABLA ── */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .4s ease .25s both}
+.table-hbar{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.table-hbar span{font-size:.73rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.tcount{background:var(--light);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.67rem;font-weight:700;color:var(--muted)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+thead tr{background:var(--azul)}
+thead th{padding:10px 11px;text-align:left;font-size:.66rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+thead th:first-child{padding-left:16px}
+thead th:last-child{padding-right:16px}
+tbody tr{border-bottom:1px solid var(--border);transition:filter .15s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{filter:brightness(.97)}
+tbody td{padding:10px 11px;font-size:.76rem;color:var(--txt);white-space:nowrap}
+tbody td:first-child{padding-left:16px;font-weight:700;color:var(--azul)}
+tbody td:last-child{padding-right:16px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.61rem;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.pill.pendiente{background:var(--pend-bg);color:var(--pend-txt);border:1px solid var(--pend-border)}
+.pill.facturado{background:var(--fact-bg);color:var(--fact-txt);border:1px solid var(--fact-border)}
+.pill.anulado{background:var(--anul-bg);color:var(--anul-txt);border:1px solid var(--anul-border)}
+.pill.observado{background:var(--obs-bg);color:var(--obs-txt);border:1px solid var(--obs-border)}
+.pill.pendiente .pill-dot{background:var(--pend-icon)}
+.pill.facturado .pill-dot{background:var(--fact-icon)}
+.pill.anulado   .pill-dot{background:var(--anul-icon)}
+.pill.observado .pill-dot{background:var(--obs-icon)}
+.doc-link{color:var(--azul2);font-weight:600;text-decoration:underline;cursor:pointer;font-size:.74rem}
+.doc-link:hover{color:var(--naranja)}
+
+/* colores de fila por estado */
+tbody tr.row-pendiente{background:#fffde7}
+tbody tr.row-facturado{background:#f0fdf4}
+tbody tr.row-anulado  {background:#faf5ff}
+tbody tr.row-observado{background:#fff1f2}
+
+.empty-state{padding:55px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:11px}
+.empty-state .ei{font-size:3rem;opacity:.25}
+.empty-state p{font-size:.8rem;color:var(--muted);max-width:250px;line-height:1.6}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:92%;max-width:860px;max-height:92vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.22);transform:translateY(24px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;position:relative}
+.overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:18px 18px 0 0}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 16px}
+.modal-head h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--azul)}
+.modal-head h2 span{color:var(--naranja)}
+.modal-close{width:34px;height:34px;background:var(--light);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:#fff1f2;border-color:#fecdd3;color:#dc2626}
+.modal-body{padding:0 26px 26px}
+
+/* grid 3 cols */
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 22px}
+.col-left{}
+.col-center{}
+.col-right{border-left:1px solid var(--border);padding-left:22px}
+
+.form-section-title{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.frow{margin-bottom:13px}
+.frow label{display:block;font-size:.72rem;font-weight:700;color:var(--txt);margin-bottom:5px}
+.frow label .req{color:var(--naranja)}
+.finput,.fselect,.ftextarea{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;color:var(--txt);background:#fff;transition:all .2s}
+.finput:focus,.fselect:focus,.ftextarea:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.finput::placeholder,.ftextarea::placeholder{color:#94a3b8}
+.finput:read-only{background:var(--light);color:var(--muted);cursor:default;border-color:var(--border)}
+.ftextarea{resize:vertical;min-height:72px}
+
+/* Gestión documental */
+.doc-section{margin-bottom:13px}
+.doc-section-label{display:flex;align-items:center;gap:7px;font-size:.71rem;font-weight:700;color:var(--txt);margin-bottom:6px}
+.doc-section-label span{font-size:.95rem}
+.doc-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+/* cálculos — fila resumen */
+.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
+
+/* footer modal */
+.modal-foot{padding:16px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.btn-cancel{background:var(--light);border:1.5px solid var(--border);color:var(--muted);font-family:inherit;font-size:.8rem;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:#fecdd3;color:#dc2626;background:#fff1f2}
+.btn-save{background:var(--naranja);border:none;color:#fff;font-family:inherit;font-size:.82rem;font-weight:800;padding:10px 28px;border-radius:9px;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-save:hover{background:var(--naranja2);transform:translateY(-1px);box-shadow:0 6px 18px rgba(249,115,22,.4)}
+.btn-save:disabled{background:#cbd5e1;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* loading spinner */
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:.82rem;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#16a34a}
+.toast.err{background:#dc2626}
+
+.mascota{position:fixed;bottom:0;left:calc(var(--sw) + 12px);width:86px;pointer-events:none;z-index:10;opacity:.82}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/logo_carze_1.png" alt="CARZE">
+    <span>Contratistas Generales</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="cotizaciones.html" class="nav-item active"><span class="nav-icon">📋</span>Cotizaciones</a>
+    <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span>Certificados</a>
+    <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span>Facturas</a>
+    <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span>Impuestos</a>
+    <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span>Personal</a>
+    <a href="finanzas.html"     class="nav-item"><span class="nav-icon">💰</span>Finanzas</a>
+    <a href="pronto_pago.html"  class="nav-item"><span class="nav-icon">⏰</span>Pronto Pago</a>
+    <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span>Caja Diaria</a>
+    <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span>Flujo de Caja</a>
+    <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span>Vencimiento y Alertas</a>
+    <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span>Seguimiento</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Gestión de Cotizaciones</h1>
+      <p>CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Acciones -->
+    <div class="action-bar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por N°, OC o Factura..." oninput="filtrar()">
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="abrirModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ingresar
+      </button>
+      <button class="btn btn-edit" id="btnEditar" onclick="editarSeleccionado()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
+      <button class="btn btn-pdf" id="btnPDF" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+      </button>
+    </div>
+
+    <!-- Tarjetas estado -->
+    <div class="status-cards">
+      <div class="sc"><div class="sc-icon">⏳</div><div><div class="sc-label">Pendiente</div><div class="sc-count" id="cnt-pendiente">0</div><div class="sc-amount" id="mnt-pendiente">S/ 0.00</div></div></div>
+      <div class="sc"><div class="sc-icon">✅</div><div><div class="sc-label">Facturado</div><div class="sc-count" id="cnt-facturado">0</div><div class="sc-amount" id="mnt-facturado">S/ 0.00</div></div></div>
+      <div class="sc"><div class="sc-icon">🚫</div><div><div class="sc-label">Anulado</div><div class="sc-count" id="cnt-anulado">0</div><div class="sc-amount" id="mnt-anulado">S/ 0.00</div></div></div>
+      <div class="sc"><div class="sc-icon">⚠️</div><div><div class="sc-label">Observado</div><div class="sc-count" id="cnt-observado">0</div><div class="sc-amount" id="mnt-observado">S/ 0.00</div></div></div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <div class="table-hbar">
+        <span>Registros</span>
+        <span class="tcount" id="tableCount">0 registros</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>N°</th><th>Fecha</th><th>Zona</th><th>Cliente</th><th>Descripción</th>
+            <th>Cotización</th><th>Informe</th><th>Acta</th><th>Guía</th>
+            <th>O.C.</th><th>HES</th><th>Factura</th><th>Sub Total</th><th>Estado</th>
+          </tr></thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState">
+        <div class="ei">📋</div>
+        <p>No hay cotizaciones registradas. Usa <strong>+ Ingresar</strong> para agregar la primera.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MASCOTA -->
+<img src="img/mascota_carze.png" alt="" class="mascota" onerror="this.style.display='none'">
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     MODAL NUEVA / EDITAR COTIZACIÓN
+══════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+<div class="modal" id="modal">
+  <div class="modal-head">
+    <h2 id="modalTitle">Nueva <span>Cotización</span></h2>
+    <button class="modal-close" onclick="cerrarModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <div class="col-left">
+        <div class="form-section-title">Datos Generales</div>
+
+        <div class="frow">
+          <label>N° de Cotización</label>
+          <input class="finput" id="fNum" readonly placeholder="Auto">
+        </div>
+        <div class="frow">
+          <label>Fecha <span class="req">*</span></label>
+          <input class="finput" id="fFecha" type="date">
+        </div>
+        <div class="frow">
+          <label>Descripción <span class="req">*</span></label>
+          <textarea class="ftextarea" id="fDesc" placeholder="Descripción del servicio o suministro"></textarea>
+        </div>
+        <div class="frow">
+          <label>Cliente <span class="req">*</span></label>
+          <select class="fselect" id="fCliente">
+            <option value="">— Seleccionar —</option>
+            <option>Sodimac</option><option>Maestro</option><option>TopyTop</option>
+            <option>Footloose</option><option>Falabella</option><option>Tottus</option>
+            <option>Open Plaza</option><option>Precio Uno</option><option>Oechsle</option>
+            <option>Samsung</option><option>Mall Plaza</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>Zona <span class="req">*</span></label>
+          <select class="fselect" id="fZona">
+            <option value="">— Seleccionar —</option>
+            <option>Cajamarca</option><option>Chiclayo</option><option>Pucallpa</option>
+            <option>Chepén</option><option>Pacasmayo</option><option>Piura</option>
+            <option>Sullana</option><option>Trujillo</option><option>Chulucanas</option>
+            <option>Chimbote</option><option>Ferreñafe</option><option>Huánuco</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>Estado <span class="req">*</span></label>
+          <select class="fselect" id="fEstado">
+            <option value="">— Seleccionar —</option>
+            <option>Pendiente</option><option>Facturado</option>
+            <option>Anulado</option><option>Observado</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>HES</label>
+          <input class="finput" id="fHES" type="number" placeholder="Código numérico" min="0">
+        </div>
+      </div>
+
+      <!-- COLUMNA CENTRO -->
+      <div class="col-center">
+        <div class="form-section-title">Cálculo Económico</div>
+
+        <div class="frow">
+          <label>Sub Total (S/) <span class="req">*</span></label>
+          <input class="finput" id="fSubTotal" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcular()">
+        </div>
+        <div class="frow">
+          <label>Condición <span class="req">*</span></label>
+          <select class="fselect" id="fCondicion" onchange="calcular()">
+            <option value="">— Seleccionar —</option>
+            <option>Suministro</option><option>Servicio</option>
+          </select>
+        </div>
+
+        <div style="background:var(--light);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:13px">
+          <div class="calc-row">
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">IGV (18%)</div>
+              <input class="finput" id="fIGV" readonly placeholder="0.00">
+            </div>
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Total</div>
+              <input class="finput" id="fTotal" readonly placeholder="0.00">
+            </div>
+          </div>
+          <div class="calc-row">
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Descuento Ley</div>
+              <input class="finput" id="fDetraccion" readonly placeholder="0.00">
+            </div>
+            <div>
+              <div style="font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Ingreso Neto</div>
+              <input class="finput" id="fIngresoNeto" readonly placeholder="0.00">
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:.68rem;color:var(--muted);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px">
+          <strong style="color:#92400e">Regla de cálculo:</strong><br>
+          • <b>Suministro:</b> Detracción = 3% del Total<br>
+          • <b>Servicio ≥ S/700:</b> Detracción = 12% del Total<br>
+          • <b>Servicio &lt; S/700:</b> Sin detracción
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA -->
+      <div class="col-right">
+        <div class="form-section-title">📁 Gestión Documental</div>
+        <p style="font-size:.67rem;color:var(--muted);margin-bottom:13px;line-height:1.5">Nombre del archivo + Link de Google Drive. En la tabla se mostrará solo el nombre como enlace clickeable.</p>
+
+        <div class="doc-section">
+          <div class="doc-section-label"><span>📋</span> Cotización</div>
+          <div class="doc-pair">
+            <input class="finput" id="fCotNombre" placeholder="Ej: EG07-167">
+            <input class="finput" id="fCotLink" placeholder="Link de Drive">
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-label"><span>📄</span> Informe</div>
+          <div class="doc-pair">
+            <input class="finput" id="fInfNombre" placeholder="Nombre del informe">
+            <input class="finput" id="fInfLink" placeholder="Link de Drive">
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-label"><span>✅</span> Acta</div>
+          <div class="doc-pair">
+            <input class="finput" id="fActaNombre" placeholder="Nombre del acta">
+            <input class="finput" id="fActaLink" placeholder="Link de Drive">
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-label"><span>🚚</span> Guía</div>
+          <div class="doc-pair">
+            <input class="finput" id="fGuiaNombre" placeholder="Nombre de la guía">
+            <input class="finput" id="fGuiaLink" placeholder="Link de Drive">
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-label"><span>🛒</span> Orden de Compra (OC)</div>
+          <div class="doc-pair">
+            <input class="finput" id="fOCNombre" placeholder="Nombre de la OC">
+            <input class="finput" id="fOCLink" placeholder="Link de Drive">
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-label"><span>🧾</span> Factura</div>
+          <div class="doc-pair">
+            <input class="finput" id="fFactNombre" placeholder="Nombre de la factura">
+            <input class="finput" id="fFactLink" placeholder="Link de Drive">
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+  </div><!-- /modal-body -->
+
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn-save" id="btnGuardar" onclick="guardar()">
+      <span id="btnGuardarTxt">INGRESAR</span>
+    </button>
+  </div>
+</div><!-- /modal -->
+</div><!-- /overlay -->
+
+<script>
+var API  = 'https://script.google.com/macros/s/AKfycbzYz32iBvpr_OE85I5wKSU-AfEsm7SXBuVixKksrUnX0XlKviqi2ZiVj1zzt2tIBJ44qg/exec';
+var HOJA = 'Hoja 1';
+var datos = [];
+var filaEdit = null;   // null = nuevo | número = N° de fila editando
+var filaSeleccionada = null;
+
+// ── SESIÓN ──────────────────────────────────────────────────
+(function(){
+  if(sessionStorage.getItem('carze_logged')!=='true') window.location.replace('index.html');
+})();
+
+window.addEventListener('DOMContentLoaded', function(){
+  var nombre = sessionStorage.getItem('carze_nombre')||'Usuario';
+  document.getElementById('userName').textContent = nombre;
+  var ini = nombre.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase();
+  document.getElementById('avatarInitials').textContent = ini||'U';
+  document.getElementById('fFecha').value = hoy();
+  cargarDatos();
+});
+
+function cerrarSesion(){
+  sessionStorage.clear();
+  window.location.replace('index.html');
+}
+
+// ── HELPERS ─────────────────────────────────────────────────
+function hoy(){
+  var d=new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function pad(n){return n<10?'0'+n:n;}
+function fmt(n){return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(v){return v!=null&&v!==''?String(v).replace(/</g,'&lt;').replace(/>/g,'&gt;'):'—';}
+
+function toast(msg,tipo){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(tipo||'ok');
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3200);
+}
+
+// ── CARGA DESDE GOOGLE SHEETS ────────────────────────────────
+function cargarDatos(){
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('tablaBody').innerHTML='<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--muted);font-size:.8rem">Cargando datos...</td></tr>';
+
+  var url = API+'?action=cargar&hoja='+encodeURIComponent(HOJA);
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res.result==='ok'){
+        datos = (res.data||[]).map(function(r){
+          return {
+            num:       r.c0, fecha:    r.c1, zona:     r.c2, cliente:  r.c3,
+            desc:      r.c4, cotNombre:r.c5, cotLink:  r.c6,
+            infNombre: r.c7, infLink:  r.c8, actaNombre:r.c9, actaLink:r.c10,
+            guiaNombre:r.c11,guiaLink: r.c12,ocNombre: r.c13,ocLink:  r.c14,
+            hes:       r.c15,factNombre:r.c16,factLink:r.c17,
+            subtotal:  r.c18,estado:   r.c19
+          };
+        });
+        renderTabla(datos);
+        actualizarContadores(datos);
+      } else {
+        toast('Error al cargar: '+(res.message||''),'err');
+        renderTabla([]);
+      }
+    })
+    .catch(function(){
+      toast('Sin conexión. Verifica la red.','err');
+      renderTabla([]);
+    });
+}
+
+// ── RENDER TABLA ─────────────────────────────────────────────
+function renderTabla(data){
+  var tbody = document.getElementById('tablaBody');
+  var empty = document.getElementById('emptyState');
+  var count = document.getElementById('tableCount');
+  tbody.innerHTML='';
+
+  if(!data||data.length===0){
+    empty.style.display='flex';
+    count.textContent='0 registros';
+    return;
+  }
+  empty.style.display='none';
+  count.textContent=data.length+' registro'+(data.length!==1?'s':'');
+
+  data.forEach(function(row,i){
+    var est = (row.estado||'').toLowerCase();
+    var cls = {pendiente:'row-pendiente',facturado:'row-facturado',anulado:'row-anulado',observado:'row-observado'}[est]||'';
+    var tr=document.createElement('tr');
+    tr.className=cls;
+    tr.dataset.idx=i;
+    tr.onclick=function(){seleccionar(this,i);};
+    tr.innerHTML=
+      '<td>'+esc(row.num)+'</td>'+
+      '<td>'+esc(row.fecha)+'</td>'+
+      '<td>'+esc(row.zona)+'</td>'+
+      '<td>'+esc(row.cliente)+'</td>'+
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">'+esc(row.desc)+'</td>'+
+      '<td>'+docLink(row.cotNombre,row.cotLink)+'</td>'+
+      '<td>'+docLink(row.infNombre,row.infLink)+'</td>'+
+      '<td>'+docLink(row.actaNombre,row.actaLink)+'</td>'+
+      '<td>'+docLink(row.guiaNombre,row.guiaLink)+'</td>'+
+      '<td>'+docLink(row.ocNombre,row.ocLink)+'</td>'+
+      '<td>'+esc(row.hes)+'</td>'+
+      '<td>'+docLink(row.factNombre,row.factLink)+'</td>'+
+      '<td>S/ '+fmt(row.subtotal)+'</td>'+
+      '<td>'+pillEstado(row.estado)+'</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function docLink(nombre,link){
+  if(!nombre||String(nombre).trim()===''||String(nombre).trim()==='-') return '<span style="color:#94a3b8">—</span>';
+  if(link&&String(link).trim()!==''&&String(link).trim()!=='-'){
+    return '<a class="doc-link" href="'+esc(link)+'" target="_blank" rel="noopener">'+esc(nombre)+'</a>';
+  }
+  return esc(nombre);
+}
+
+function pillEstado(estado){
+  var e=(estado||'').toLowerCase();
+  var cls={pendiente:'pendiente',facturado:'facturado',anulado:'anulado',observado:'observado'}[e]||'pendiente';
+  return '<span class="pill '+cls+'"><span class="pill-dot"></span>'+esc(estado)+'</span>';
+}
+
+// ── CONTADORES ───────────────────────────────────────────────
+function actualizarContadores(data){
+  var est={pendiente:{c:0,m:0},facturado:{c:0,m:0},anulado:{c:0,m:0},observado:{c:0,m:0}};
+  data.forEach(function(r){
+    var e=(r.estado||'').toLowerCase();
+    if(est[e]){est[e].c++;est[e].m+=parseFloat(r.subtotal)||0;}
+  });
+  ['pendiente','facturado','anulado','observado'].forEach(function(k){
+    document.getElementById('cnt-'+k).textContent=est[k].c;
+    document.getElementById('mnt-'+k).textContent='S/ '+fmt(est[k].m);
+  });
+}
+
+// ── SELECCIÓN DE FILA ────────────────────────────────────────
+function seleccionar(tr,idx){
+  document.querySelectorAll('#tablaBody tr').forEach(function(r){r.style.outline='none';});
+  tr.style.outline='2px solid var(--naranja)';
+  filaSeleccionada=idx;
+  document.getElementById('btnEditar').disabled=false;
+  document.getElementById('btnPDF').disabled=false;
+}
+
+// ── FILTRO ───────────────────────────────────────────────────
+function filtrar(){
+  var q=document.getElementById('searchInput').value.toLowerCase().trim();
+  var f=q?datos.filter(function(r){return Object.values(r).some(function(v){return String(v).toLowerCase().includes(q);});}):datos;
+  renderTabla(f);
+  filaSeleccionada=null;
+  document.getElementById('btnEditar').disabled=true;
+  document.getElementById('btnPDF').disabled=true;
+}
+
+// ── CÁLCULOS AUTOMÁTICOS ─────────────────────────────────────
+function calcular(){
+  var sub=parseFloat(document.getElementById('fSubTotal').value)||0;
+  var cond=document.getElementById('fCondicion').value;
+  var igv=Math.round(sub*0.18*100)/100;
+  var total=Math.round((sub+igv)*100)/100;
+  var det=0;
+  if(cond==='Suministro'){
+    det=Math.round(total*0.03*100)/100;
+  } else if(cond==='Servicio'){
+    det=total>=700?Math.round(total*0.12):0;
+  }
+  var neto=Math.round((total-det)*100)/100;
+  document.getElementById('fIGV').value=fmt(igv);
+  document.getElementById('fTotal').value=fmt(total);
+  document.getElementById('fDetraccion').value=fmt(det);
+  document.getElementById('fIngresoNeto').value=fmt(neto);
+}
+
+// ── GENERAR N° CORRELATIVO ───────────────────────────────────
+function generarNumero(){
+  if(datos.length===0){document.getElementById('fNum').value='001';return;}
+  var nums=datos.map(function(r){return parseInt(r.num)||0;});
+  var max=Math.max.apply(null,nums);
+  document.getElementById('fNum').value=String(max+1).padStart(3,'0');
+}
+
+// ── ABRIR MODAL (NUEVO) ──────────────────────────────────────
+function abrirModal(){
+  filaEdit=null;
+  limpiarForm();
+  generarNumero();
+  document.getElementById('fFecha').value=hoy();
+  document.getElementById('modalTitle').innerHTML='Nueva <span>Cotización</span>';
+  document.getElementById('btnGuardarTxt').textContent='INGRESAR';
+  document.getElementById('overlay').classList.add('open');
+}
+
+// ── ABRIR MODAL (EDITAR) ─────────────────────────────────────
+function editarSeleccionado(){
+  if(filaSeleccionada===null) return;
+  var row=datos[filaSeleccionada];
+  filaEdit=row.num;
+  llenarForm(row);
+  document.getElementById('modalTitle').innerHTML='Editar <span>Cotización</span>';
+  document.getElementById('btnGuardarTxt').textContent='ACTUALIZAR';
+  document.getElementById('overlay').classList.add('open');
+  calcular();
+}
+
+function llenarForm(r){
+  document.getElementById('fNum').value=r.num||'';
+  document.getElementById('fFecha').value=r.fecha||'';
+  document.getElementById('fDesc').value=r.desc||'';
+  document.getElementById('fCliente').value=r.cliente||'';
+  document.getElementById('fZona').value=r.zona||'';
+  document.getElementById('fEstado').value=r.estado||'';
+  document.getElementById('fHES').value=r.hes||'';
+  document.getElementById('fSubTotal').value=r.subtotal||'';
+  document.getElementById('fCondicion').value='';
+  document.getElementById('fCotNombre').value=limDash(r.cotNombre);
+  document.getElementById('fCotLink').value=limDash(r.cotLink);
+  document.getElementById('fInfNombre').value=limDash(r.infNombre);
+  document.getElementById('fInfLink').value=limDash(r.infLink);
+  document.getElementById('fActaNombre').value=limDash(r.actaNombre);
+  document.getElementById('fActaLink').value=limDash(r.actaLink);
+  document.getElementById('fGuiaNombre').value=limDash(r.guiaNombre);
+  document.getElementById('fGuiaLink').value=limDash(r.guiaLink);
+  document.getElementById('fOCNombre').value=limDash(r.ocNombre);
+  document.getElementById('fOCLink').value=limDash(r.ocLink);
+  document.getElementById('fFactNombre').value=limDash(r.factNombre);
+  document.getElementById('fFactLink').value=limDash(r.factLink);
+}
+
+function limDash(v){return(!v||v==='-')?'':v;}
+
+// ── CERRAR MODAL ─────────────────────────────────────────────
+function cerrarModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+function overlayClick(e){
+  if(e.target===document.getElementById('overlay')) cerrarModal();
+}
+
+// ── LIMPIAR FORM ─────────────────────────────────────────────
+function limpiarForm(){
+  ['fNum','fFecha','fDesc','fHES','fSubTotal','fIGV','fTotal','fDetraccion','fIngresoNeto',
+   'fCotNombre','fCotLink','fInfNombre','fInfLink','fActaNombre','fActaLink',
+   'fGuiaNombre','fGuiaLink','fOCNombre','fOCLink','fFactNombre','fFactLink']
+   .forEach(function(id){document.getElementById(id).value='';});
+  ['fCliente','fZona','fEstado','fCondicion'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+// ── GUARDAR / ACTUALIZAR ─────────────────────────────────────
+function guardar(){
+  var fecha=document.getElementById('fFecha').value;
+  var desc=document.getElementById('fDesc').value.trim();
+  var cliente=document.getElementById('fCliente').value;
+  var zona=document.getElementById('fZona').value;
+  var estado=document.getElementById('fEstado').value;
+  var sub=document.getElementById('fSubTotal').value;
+  var condicion=document.getElementById('fCondicion').value;
+
+  if(!fecha||!desc||!cliente||!zona||!estado||!sub||!condicion){
+    toast('Completa todos los campos obligatorios (*)','err');
+    return;
+  }
+
+  var num=document.getElementById('fNum').value;
+  var cols=[
+    num,fecha,zona,cliente,desc,
+    v('fCotNombre'), v('fCotLink'),
+    v('fInfNombre'), v('fInfLink'),
+    v('fActaNombre'),v('fActaLink'),
+    v('fGuiaNombre'),v('fGuiaLink'),
+    v('fOCNombre'),  v('fOCLink'),
+    v('fHES'),
+    v('fFactNombre'),v('fFactLink'),
+    parseFloat(sub)||0,
+    estado
+  ];
+
+  var btn=document.getElementById('btnGuardar');
+  var txt=document.getElementById('btnGuardarTxt');
+  btn.disabled=true;
+  txt.innerHTML='<span class="spinner"></span>';
+
+  var accion = filaEdit ? 'actualizar' : 'guardar';
+  var params  = '?action='+accion+'&hoja='+encodeURIComponent(HOJA)+'&cols='+encodeURIComponent(JSON.stringify(cols));
+  if(filaEdit) params+='&n='+encodeURIComponent(filaEdit);
+
+  fetch(API+params)
+    .then(function(r){return r.json();})
+    .then(function(res){
+      btn.disabled=false;
+      txt.textContent=filaEdit?'ACTUALIZAR':'INGRESAR';
+      if(res.result==='ok'){
+        toast(filaEdit?'Cotización actualizada correctamente':'Cotización guardada correctamente','ok');
+        cerrarModal();
+        cargarDatos();
+        filaSeleccionada=null;
+        document.getElementById('btnEditar').disabled=true;
+        document.getElementById('btnPDF').disabled=true;
+      } else {
+        toast('Error: '+(res.message||'Intenta de nuevo'),'err');
+      }
+    })
+    .catch(function(){
+      btn.disabled=false;
+      txt.textContent=filaEdit?'ACTUALIZAR':'INGRESAR';
+      toast('Sin conexión. Verifica la red.','err');
+    });
+}
+
+function v(id){
+  var val=document.getElementById(id).value.trim();
+  return val||'-';
+}
+
+// ESC cierra modal
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModal();});
+</script>
+</body>
+</html>
