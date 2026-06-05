@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso | CARZE Contratistas Generales S.A.C.</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--azul:#1a3a6b;--azul2:#1e40af;--naranja:#f97316;--naranja2:#ea580c;--dark:#0a0f1e;--dark2:#1e293b;--slate:#334155;--muted:#64748b;--border:#e2e8f0}
+        body{height:100vh;display:flex;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif;overflow:hidden;background:var(--dark)}
+        .panel-left{flex:1.1;background:linear-gradient(160deg,#0a0f1e 0%,#0d1f3c 60%,#1a3a6b 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:40px}
+        .panel-left::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(249,115,22,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.07) 1px,transparent 1px);background-size:40px 40px}
+        .circle{position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none}
+        .c1{width:300px;height:300px;background:rgba(249,115,22,.15);top:-60px;right:-60px}
+        .c2{width:250px;height:250px;background:rgba(26,58,107,.5);bottom:-40px;left:-40px}
+        .c3{width:140px;height:140px;background:rgba(249,115,22,.08);bottom:120px;right:80px}
+        .brand-wrap{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:28px}
+        .logo-img{width:200px;max-width:65%;filter:drop-shadow(0 0 30px rgba(249,115,22,.4));animation:glow 3s ease-in-out infinite}
+        @keyframes glow{0%,100%{filter:drop-shadow(0 0 25px rgba(249,115,22,.3))}50%{filter:drop-shadow(0 0 50px rgba(249,115,22,.6))}}
+        .brand-tagline{color:rgba(255,255,255,.5);font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600}
+        .stats-row{display:flex;gap:10px;position:relative;z-index:2}
+        .stat-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;text-align:center;backdrop-filter:blur(8px);min-width:70px}
+        .stat-num{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:var(--naranja)}
+        .stat-lbl{font-size:.62rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+        .ticker-wrap{position:absolute;bottom:0;left:0;right:0;background:rgba(249,115,22,.1);border-top:1px solid rgba(249,115,22,.2);padding:9px 0;overflow:hidden;z-index:2}
+        .ticker-track{display:flex;gap:50px;white-space:nowrap;animation:ticker 18s linear infinite}
+        .ticker-item{color:rgba(255,255,255,.35);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}
+        .ticker-dot{color:var(--naranja);opacity:.5}
+        @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+        .panel-right{flex:.9;background:#fff;display:flex;align-items:center;justify-content:center;padding:50px 40px;position:relative}
+        .panel-right::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--azul),var(--naranja))}
+        .login-box{width:100%;max-width:380px}
+        .login-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+        .eyebrow-line{flex:1;height:1px;background:var(--border)}
+        .eyebrow-text{font-size:.7rem;color:var(--muted);font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+        .login-title{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--dark2);margin-bottom:6px;line-height:1.1}
+        .login-title span{color:var(--naranja)}
+        .login-sub{font-size:.83rem;color:var(--muted);margin-bottom:32px}
+        .input-group{margin-bottom:18px}
+        .input-label{display:flex;align-items:center;gap:6px;margin-bottom:7px;font-weight:600;color:var(--slate);font-size:.82rem}
+        .input-label svg{opacity:.5}
+        .input-wrap{position:relative}
+        .input-wrap input{width:100%;padding:13px 14px 13px 42px;border:1.5px solid var(--border);border-radius:10px;font-size:.93rem;font-family:inherit;color:var(--dark2);transition:all .2s;background:#fafafa}
+        .input-wrap input:focus{border-color:var(--naranja);outline:none;background:#fff;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+        .input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+        .toggle-pass{position:absolute;right:13px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);background:none;border:none;padding:0;line-height:0}
+        .toggle-pass:hover{color:var(--naranja)}
+        #errorMsg{display:none;background:#fff1f2;border:1px solid #fda4af;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#dc2626;font-weight:600;margin-bottom:16px;align-items:center;gap:8px}
+        .btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .25s ease;font-family:inherit;letter-spacing:.04em;position:relative;overflow:hidden}
+        .btn-login::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--naranja),var(--naranja2));opacity:0;transition:opacity .25s}
+        .btn-login:hover::after{opacity:1}
+        .btn-login:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(249,115,22,.35)}
+        .btn-login span{position:relative;z-index:1}
+        .btn-login:active{transform:translateY(0)}
+        .btn-login .spinner-btn{display:none;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;position:relative;z-index:1;margin:0 auto}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .login-footer{margin-top:28px;text-align:center;font-size:.72rem;color:#cbd5e1}
+        .login-footer strong{color:var(--muted)}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .login-box>*{animation:fadeUp .5s ease both}
+        .login-box>*:nth-child(1){animation-delay:.05s}.login-box>*:nth-child(2){animation-delay:.1s}
+        .login-box>*:nth-child(3){animation-delay:.15s}.login-box>*:nth-child(4){animation-delay:.2s}
+        .login-box>*:nth-child(5){animation-delay:.25s}.login-box>*:nth-child(6){animation-delay:.3s}
+        /* OVERLAY TRANSICIÓN */
+        #carze-transition-overlay{position:fixed;inset:0;z-index:9999;background:#0a0f1e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;pointer-events:none;transition:opacity .25s ease}
+        #carze-transition-overlay.visible{opacity:1;pointer-events:all}
+        .scan-container{width:280px;position:relative}
+        .scan-bar-bg{width:100%;height:4px;background:rgba(249,115,22,.15);border-radius:4px;overflow:hidden}
+        .scan-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#f97316,#fbbf24);border-radius:4px;box-shadow:0 0 12px rgba(249,115,22,.8);transition:width .05s linear}
+        .scan-label{display:flex;justify-content:space-between;margin-top:8px;font-family:'Courier New',monospace;font-size:.72rem;color:rgba(249,115,22,.7);letter-spacing:.08em}
+        .access-icon{width:64px;height:64px;border-radius:50%;background:rgba(249,115,22,.1);border:2px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;animation:iconPulse 1s ease-in-out infinite}
+        @keyframes iconPulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)}50%{box-shadow:0 0 0 14px rgba(249,115,22,0)}}
+        .access-status{font-family:'Courier New',monospace;font-size:.78rem;color:#4ade80;letter-spacing:.15em;text-transform:uppercase}
+        .scan-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(249,115,22,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.04) 1px,transparent 1px);background-size:30px 30px;animation:gridMove 4s linear infinite;pointer-events:none}
+        @keyframes gridMove{from{background-position:0 0}to{background-position:30px 30px}}
+        @keyframes glitchOut{0%{transform:translateX(0) skewX(0deg);opacity:1}20%{transform:translateX(-8px) skewX(-3deg);opacity:.8}40%{transform:translateX(8px) skewX(3deg);opacity:.9}60%{transform:translateX(-4px) skewX(-1deg);opacity:.7}80%{transform:translateX(4px) skewX(1deg);opacity:.5}100%{transform:translateX(0) skewX(0deg);opacity:0}}
+        #carze-transition-overlay.glitch-out{animation:glitchOut .4s ease forwards}
+    </style>
+</head>
+<body>
+
+<div class="panel-left">
+    <div class="circle c1"></div><div class="circle c2"></div><div class="circle c3"></div>
+    <div class="brand-wrap">
+        <img src="img/logo_carze_2.png" alt="CARZE" class="logo-img">
+        <div class="brand-tagline">Sistema de Gestión Empresarial</div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-num">100%</div><div class="stat-lbl">Digital</div></div>
+            <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-lbl">Disponible</div></div>
+            <div class="stat-card"><div class="stat-num">🔒</div><div class="stat-lbl">Seguro</div></div>
+        </div>
+    </div>
+    <div class="ticker-wrap"><div class="ticker-track">
+        <span class="ticker-item">Cotizaciones</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Certificados</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Facturas</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Finanzas</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Personal</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Impuestos</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Caja Diaria</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Seguimiento</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Cotizaciones</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Certificados</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Facturas</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Finanzas</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Personal</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Impuestos</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Caja Diaria</span><span class="ticker-dot">◆</span>
+        <span class="ticker-item">Seguimiento</span><span class="ticker-dot">◆</span>
+    </div></div>
+</div>
+
+<div class="panel-right">
+    <div class="login-box">
+        <div class="login-eyebrow">
+            <div class="eyebrow-line"></div>
+            <div class="eyebrow-text">CARZE Contratistas Generales S.A.C.</div>
+            <div class="eyebrow-line"></div>
+        </div>
+        <h1 class="login-title">Bienvenido<span>.</span></h1>
+        <p class="login-sub">Ingresa tus credenciales para acceder al sistema.</p>
+        <div id="errorMsg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="errorTxt">Usuario o contraseña incorrectos</span>
+        </div>
+        <form id="loginForm" onsubmit="validarAcceso(event)">
+            <div class="input-group">
+                <div class="input-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Usuario</div>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input type="text" id="usuario" placeholder="Ej: Robert Carrillo" autocomplete="username" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="input-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Contraseña</div>
+                <div class="input-wrap">
+                    <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input type="password" id="password" placeholder="••••••••••" autocomplete="current-password" required>
+                    <button type="button" class="toggle-pass" onclick="togglePassword()" id="toggleBtn">
+                        <svg id="eyeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn-login" id="btnLogin">
+                <span id="btnTxt">INGRESAR AL SISTEMA</span>
+                <div class="spinner-btn" id="btnSpinner"></div>
+            </button>
+        </form>
+        <div class="login-footer">© 2026 <strong>CARZE Contratistas Generales S.A.C.</strong><br>Todos los derechos reservados</div>
+    </div>
+</div>
+
+<!-- OVERLAY TRANSICIÓN -->
+<div id="carze-transition-overlay">
+    <div class="scan-grid"></div>
+    <div class="access-icon"><svg id="access-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <div style="text-align:center">
+        <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:.1em;margin-bottom:4px">CARZE SYSTEM</div>
+        <div id="access-status-txt" class="access-status">INICIANDO...</div>
+    </div>
+    <div class="scan-container">
+        <div class="scan-bar-bg"><div class="scan-bar-fill" id="scan-fill"></div></div>
+        <div class="scan-label"><span>CARGANDO MÓDULOS</span><span id="scan-pct">0%</span></div>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey:            "AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:        "gestioncarze.firebaseapp.com",
+    projectId:         "gestioncarze",
+    storageBucket:     "gestioncarze.firebasestorage.app",
+    messagingSenderId: "487407475826",
+    appId:             "1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── HELPERS UI ──────────────────────────────────────────────
+function togglePassword() {
+    var input = document.getElementById('password');
+    var icon  = document.getElementById('eyeIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+        input.type = 'password';
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+}
+window.togglePassword = togglePassword;
+
+function mostrarError(msg) {
+    var div = document.getElementById('errorMsg');
+    document.getElementById('errorTxt').textContent = msg;
+    div.style.display = 'flex';
+}
+
+function setLoading(v) {
+    document.getElementById('btnTxt').style.display     = v ? 'none' : 'inline';
+    document.getElementById('btnSpinner').style.display  = v ? 'block' : 'none';
+    document.getElementById('btnLogin').disabled = v;
+}
+
+// ── LOGIN CON FIRESTORE ─────────────────────────────────────
+async function validarAcceso(event) {
+    event.preventDefault();
+    document.getElementById('errorMsg').style.display = 'none';
+
+    var usuario    = document.getElementById('usuario').value.trim();
+    var contrasena = document.getElementById('password').value.trim();
+
+    if (!usuario || !contrasena) { mostrarError('Por favor completa todos los campos.'); return; }
+
+    setLoading(true);
+
+    try {
+        // Buscar en colección "usuarios" donde campo "usuario" == valor ingresado
+        const q = query(
+            collection(db, 'usuarios'),
+            where('usuario', '==', usuario)
+        );
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            setLoading(false);
+            mostrarError('Usuario o contraseña incorrectos');
+            document.getElementById('password').value = '';
+            return;
+        }
+
+        const userData = snap.docs[0].data();
+
+        if (userData.contrasena !== contrasena) {
+            setLoading(false);
+            mostrarError('Usuario o contraseña incorrectos');
+            document.getElementById('password').value = '';
+            return;
+        }
+
+        // Login exitoso
+        sessionStorage.setItem('carze_logged', 'true');
+        sessionStorage.setItem('carze_nombre',  userData.nombre  || usuario);
+        sessionStorage.setItem('carze_rol',      userData.rol     || 'usuario');
+        sessionStorage.setItem('carze_uid',      snap.docs[0].id);
+
+        setLoading(false);
+        carzeTransicionSalida('PORTADA.html');
+
+    } catch(err) {
+        setLoading(false);
+        mostrarError('Error de conexión: ' + err.message);
+    }
+}
+window.validarAcceso = validarAcceso;
+
+// ── TRANSICIÓN DE SALIDA ────────────────────────────────────
+function carzeTransicionSalida(destino) {
+    var overlay  = document.getElementById('carze-transition-overlay');
+    var fill     = document.getElementById('scan-fill');
+    var pct      = document.getElementById('scan-pct');
+    var status   = document.getElementById('access-status-txt');
+    var icon     = document.getElementById('access-icon-svg');
+    overlay.classList.add('visible');
+    var progress = 0;
+    var msgs = [
+        {at:0,  txt:'VERIFICANDO CREDENCIALES...'},
+        {at:30, txt:'AUTENTICANDO USUARIO...'},
+        {at:60, txt:'CARGANDO PERFIL...'},
+        {at:85, txt:'PREPARANDO ENTORNO...'},
+        {at:99, txt:'✔ ACCESO CONCEDIDO'},
+    ];
+    var interval = setInterval(function(){
+        var step = progress < 70 ? 2.2 : (progress < 90 ? 1.1 : 0.55);
+        progress = Math.min(progress + step, 100);
+        fill.style.width = progress + '%';
+        pct.textContent  = Math.floor(progress) + '%';
+        for (var i = msgs.length-1; i >= 0; i--) {
+            if (progress >= msgs[i].at) { status.textContent = msgs[i].txt; break; }
+        }
+        if (progress >= 100) {
+            clearInterval(interval);
+            icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+            icon.parentElement.style.borderColor  = '#4ade80';
+            icon.parentElement.style.background   = 'rgba(74,222,128,.1)';
+            setTimeout(function(){
+                overlay.classList.add('glitch-out');
+                setTimeout(function(){ window.location.href = destino; }, 380);
+            }, 500);
+        }
+    }, 28);
+}
+window.carzeTransicionSalida = carzeTransicionSalida;
+
+// Shake keyframe
+var s = document.createElement('style');
+s.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}';
+document.head.appendChild(s);
+</script>
+
+</body>
+</html>
