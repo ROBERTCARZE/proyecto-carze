@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizaciones | CARZE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --pend-bg:#fffbeb;--pend-border:#fde68a;--pend-icon:#f59e0b;--pend-txt:#92400e;
+  --fact-bg:#f0fdf4;--fact-border:#bbf7d0;--fact-icon:#16a34a;--fact-txt:#14532d;
+  --anul-bg:#faf5ff;--anul-border:#e9d5ff;--anul-icon:#9333ea;--anul-txt:#581c87;
+  --obs-bg:#fff1f2;--obs-border:#fecdd3;--obs-icon:#dc2626;--obs-txt:#7f1d1d;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sidebar-logo img{width:115px}
+.sidebar-logo span{font-size:.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:var(--light);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.1),rgba(249,115,22,.04));color:var(--naranja);border-left:3px solid var(--naranja);padding-left:9px}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+
+/* MAIN */
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:22px 28px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* ACTION BAR */
+.action-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.search-wrap{position:relative;min-width:200px;max-width:300px;flex:1}
+.search-wrap input{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:9px;font-size:.81rem;font-family:inherit;color:var(--txt);background:var(--white);transition:all .2s}
+.search-wrap input:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.filter-select{padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:.81rem;font-family:inherit;color:var(--txt);background:var(--white);cursor:pointer;transition:all .2s;min-width:150px}
+.filter-select:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.03em}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{background:var(--azul2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,58,107,.3)}
+.btn-edit{background:var(--naranja);color:#fff}
+.btn-edit:hover{background:var(--naranja2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(249,115,22,.35)}
+.btn-edit:disabled,.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-pdf{background:#dc2626;color:#fff}
+.btn-pdf:hover{background:#b91c1c;transform:translateY(-1px);box-shadow:0 4px 14px rgba(220,38,38,.3)}
+
+/* STATUS CARDS */
+.status-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.sc{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:15px 17px;display:flex;align-items:center;gap:13px;transition:transform .2s,box-shadow .2s;animation:fadeUp .4s ease both;cursor:pointer}
+.sc:nth-child(1){animation-delay:.05s;border-color:var(--pend-border);background:var(--pend-bg)}
+.sc:nth-child(2){animation-delay:.1s;border-color:var(--fact-border);background:var(--fact-bg)}
+.sc:nth-child(3){animation-delay:.15s;border-color:var(--anul-border);background:var(--anul-bg)}
+.sc:nth-child(4){animation-delay:.2s;border-color:var(--obs-border);background:var(--obs-bg)}
+.sc:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.07)}
+.sc-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.sc:nth-child(1) .sc-icon{background:var(--pend-icon)}
+.sc:nth-child(2) .sc-icon{background:var(--fact-icon)}
+.sc:nth-child(3) .sc-icon{background:var(--anul-icon)}
+.sc:nth-child(4) .sc-icon{background:var(--obs-icon)}
+.sc-label{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.sc:nth-child(1) .sc-label{color:var(--pend-txt)}
+.sc:nth-child(2) .sc-label{color:var(--fact-txt)}
+.sc:nth-child(3) .sc-label{color:var(--anul-txt)}
+.sc:nth-child(4) .sc-label{color:var(--obs-txt)}
+.sc-count{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;line-height:1;margin-bottom:2px}
+.sc:nth-child(1) .sc-count{color:var(--pend-icon)}
+.sc:nth-child(2) .sc-count{color:var(--fact-icon)}
+.sc:nth-child(3) .sc-count{color:var(--anul-icon)}
+.sc:nth-child(4) .sc-count{color:var(--obs-icon)}
+.sc-amount{font-size:.7rem;font-weight:700;color:var(--muted)}
+.sc.active-filter{outline:2.5px solid var(--naranja);outline-offset:2px}
+
+/* TABLA */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .4s ease .25s both}
+.table-hbar{padding:13px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.table-hbar span{font-size:.73rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.tcount{background:var(--light);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.67rem;font-weight:700;color:var(--muted)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+thead tr{background:var(--azul)}
+thead th{padding:10px 10px;text-align:left;font-size:.64rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:rgba(255,255,255,.08)}
+thead th:first-child{padding-left:14px}
+thead th:last-child{padding-right:14px;cursor:default}
+thead th .sort-icon{margin-left:4px;opacity:.5;font-size:.6rem}
+thead th.sorted .sort-icon{opacity:1}
+tbody tr{border-bottom:1px solid var(--border);transition:filter .15s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{filter:brightness(.96)}
+tbody tr.row-selected{outline:2px solid var(--naranja);outline-offset:-2px}
+tbody td{padding:10px 10px;font-size:.76rem;color:var(--txt);white-space:nowrap}
+tbody td:first-child{padding-left:14px;font-weight:700;color:var(--azul)}
+tbody td:last-child{padding-right:14px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.61rem;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.pill.pendiente{background:var(--pend-bg);color:var(--pend-txt);border:1px solid var(--pend-border)}
+.pill.facturado{background:var(--fact-bg);color:var(--fact-txt);border:1px solid var(--fact-border)}
+.pill.anulado{background:var(--anul-bg);color:var(--anul-txt);border:1px solid var(--anul-border)}
+.pill.observado{background:var(--obs-bg);color:var(--obs-txt);border:1px solid var(--obs-border)}
+.pill.pendiente .pill-dot{background:var(--pend-icon)}
+.pill.facturado .pill-dot{background:var(--fact-icon)}
+.pill.anulado   .pill-dot{background:var(--anul-icon)}
+.pill.observado .pill-dot{background:var(--obs-icon)}
+.doc-link{color:var(--azul2);font-weight:600;text-decoration:underline;cursor:pointer;font-size:.74rem}
+.doc-link:hover{color:var(--naranja)}
+tbody tr.row-pendiente{background:#fffde7}
+tbody tr.row-facturado{background:#f0fdf4}
+tbody tr.row-anulado  {background:#faf5ff}
+tbody tr.row-observado{background:#fff1f2}
+
+/* Botón eliminar */
+.btn-del{background:transparent;border:1px solid #fecaca;color:#dc2626;border-radius:7px;padding:4px 8px;cursor:pointer;font-size:.75rem;transition:all .18s;line-height:1}
+.btn-del:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+
+/* PAGINACIÓN */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.pag-info{font-size:.73rem;color:var(--muted);font-weight:600}
+.pag-btns{display:flex;align-items:center;gap:6px}
+.pag-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:.8rem;font-weight:700;color:var(--muted);transition:all .18s}
+.pag-btn:hover:not(:disabled){border-color:var(--naranja);color:var(--naranja)}
+.pag-btn:disabled{opacity:.35;cursor:not-allowed}
+.pag-btn.active{background:var(--azul);border-color:var(--azul);color:#fff}
+.pag-size{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.76rem;color:var(--txt);background:var(--white);cursor:pointer}
+.pag-size:focus{outline:none;border-color:var(--naranja)}
+
+.empty-state{padding:55px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:11px}
+.empty-state .ei{font-size:3rem;opacity:.25}
+.empty-state p{font-size:.8rem;color:var(--muted);max-width:250px;line-height:1.6}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:92%;max-width:860px;max-height:92vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.22);transform:translateY(24px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;position:relative}
+.overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:18px 18px 0 0}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 16px}
+.modal-head h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--azul)}
+.modal-head h2 span{color:var(--naranja)}
+.modal-close{width:34px;height:34px;background:var(--light);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:#fff1f2;border-color:#fecdd3;color:#dc2626}
+.modal-body{padding:0 26px 26px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 22px}
+.col-right{border-left:1px solid var(--border);padding-left:22px}
+.form-section-title{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.frow{margin-bottom:13px}
+.frow label{display:block;font-size:.72rem;font-weight:700;color:var(--txt);margin-bottom:5px}
+.frow label .req{color:var(--naranja)}
+.finput,.fselect,.ftextarea{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;color:var(--txt);background:#fff;transition:all .2s}
+.finput:focus,.fselect:focus,.ftextarea:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.finput::placeholder,.ftextarea::placeholder{color:#94a3b8}
+.finput:read-only{background:var(--light);color:var(--muted);cursor:default;border-color:var(--border)}
+.ftextarea{resize:vertical;min-height:72px}
+.doc-section{margin-bottom:13px}
+.doc-section-label{display:flex;align-items:center;gap:7px;font-size:.71rem;font-weight:700;color:var(--txt);margin-bottom:6px}
+.doc-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
+.modal-foot{padding:16px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.btn-cancel{background:var(--light);border:1.5px solid var(--border);color:var(--muted);font-family:inherit;font-size:.8rem;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:#fecdd3;color:#dc2626;background:#fff1f2}
+.btn-save{background:var(--naranja);border:none;color:#fff;font-family:inherit;font-size:.82rem;font-weight:800;padding:10px 28px;border-radius:9px;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-save:hover{background:var(--naranja2);transform:translateY(-1px);box-shadow:0 6px 18px rgba(249,115,22,.4)}
+.btn-save:disabled{background:#cbd5e1;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* MODAL CONFIRMAR */
+.confirm-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(3px);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.confirm-overlay.open{opacity:1;pointer-events:all}
+.confirm-box{background:#fff;border-radius:16px;padding:28px 30px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:scale(.95);transition:transform .25s cubic-bezier(.34,1.56,.64,1);position:relative}
+.confirm-overlay.open .confirm-box{transform:scale(1)}
+.confirm-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#dc2626,#f87171);border-radius:16px 16px 0 0}
+.confirm-icon{font-size:2.4rem;margin-bottom:10px}
+.confirm-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--txt);margin-bottom:8px}
+.confirm-msg{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:22px}
+.confirm-btns{display:flex;gap:10px;justify-content:center}
+.confirm-cancel{padding:9px 22px;border:1.5px solid var(--border);border-radius:9px;background:var(--light);color:var(--muted);font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s}
+.confirm-cancel:hover{border-color:#fecdd3;color:#dc2626}
+.confirm-ok{padding:9px 22px;border:none;border-radius:9px;background:#dc2626;color:#fff;font-family:inherit;font-size:.8rem;font-weight:800;cursor:pointer;transition:all .2s}
+.confirm-ok:hover{background:#b91c1c;transform:translateY(-1px)}
+
+/* SPINNER & TOAST */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:.82rem;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#16a34a}
+.toast.err{background:#dc2626}
+.toast.warn{background:#f59e0b}
+
+.mascota{position:fixed;bottom:0;left:calc(var(--sw) + 12px);width:86px;pointer-events:none;z-index:10;opacity:.82}
+
+/* PRINT / PDF */
+@media print{
+  body{overflow:visible!important;background:#fff!important}
+  .sidebar,.topbar,.action-bar,.status-cards,.pagination,.mascota,
+  .btn-del,.overlay,.confirm-overlay,.toast{display:none!important}
+  .main{margin-left:0!important;height:auto!important;overflow:visible!important}
+  .content{padding:0!important;overflow:visible!important}
+  .table-wrap{border:none!important;border-radius:0!important;animation:none!important;box-shadow:none!important}
+  .table-hbar{display:none!important}
+  .table-scroll{overflow:visible!important}
+  table{min-width:unset!important;width:100%!important;font-size:7.5pt!important}
+  thead th{font-size:7pt!important;padding:6px 5px!important;background:#1a3a6b!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tbody td{padding:5px 5px!important;font-size:7.5pt!important}
+  tbody tr.row-pendiente{background:#fffde7!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tbody tr.row-facturado{background:#f0fdf4!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tbody tr.row-anulado{background:#faf5ff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tbody tr.row-observado{background:#fff1f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pill{font-size:6.5pt!important;padding:2px 5px!important}
+  #pdfHeader{display:block!important}
+  #pdfFooter{display:block!important}
+  @page{size:A4 landscape;margin:12mm 10mm}
+}
+#pdfHeader{display:none}
+#pdfFooter{display:none}
+
+.upload-box{border:1.5px dashed var(--border);border-radius:8px;padding:8px 10px;transition:all .2s;background:#fafafa;position:relative;overflow:hidden}
+.upload-box:hover{border-color:var(--naranja);background:#fff8f5}
+.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-label{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--muted);pointer-events:none}
+.upload-label svg{flex-shrink:0;color:var(--naranja)}
+.upload-name{font-size:.71rem;color:var(--azul2);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:none}
+.upload-prog{height:3px;background:var(--border);border-radius:3px;margin-top:5px;overflow:hidden;display:none}
+.upload-prog-fill{height:100%;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:3px;width:0%;transition:width .2s}
+.upload-st{font-size:.62rem;margin-top:2px;display:none}
+.upload-st.ing{color:var(--azul2);display:block}
+.upload-st.ok{color:#16a34a;display:block}
+.upload-st.err{color:#dc2626;display:block}
+.doc-exist{font-size:.68rem;color:var(--azul2);margin-top:4px;display:none;align-items:center;gap:5px;flex-wrap:wrap}
+.doc-exist a{color:var(--azul2);text-decoration:underline;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-exist .rm{cursor:pointer;color:#dc2626;font-size:.65rem;margin-left:auto;padding:1px 5px;border:1px solid #fecaca;border-radius:4px;background:#fff1f2;white-space:nowrap}
+.doc-exist .rm:hover{background:#dc2626;color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/logo_carze_1.png" alt="CARZE">
+    <span>Contratistas Generales</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="cotizaciones.html" class="nav-item active"><span class="nav-icon">📋</span>Cotizaciones</a>
+    <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span>Certificados</a>
+    <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span>Facturas</a>
+    <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span>Impuestos</a>
+    <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span>Personal</a>
+    <a href="finanzas.html"     class="nav-item"><span class="nav-icon">💰</span>Finanzas</a>
+    <a href="pronto_pago.html"  class="nav-item"><span class="nav-icon">⏰</span>Pronto Pago</a>
+    <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span>Caja Diaria</a>
+    <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span>Flujo de Caja</a>
+    <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span>Vencimiento y Alertas</a>
+    <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span>Seguimiento</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Gestión de Cotizaciones</h1>
+      <p>CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- PDF HEADER (solo visible al imprimir) -->
+    <div id="pdfHeader" style="margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1a3a6b">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:14px">
+          <img src="img/logo_carze_1.png" alt="CARZE" style="height:52px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:14pt;font-weight:800;color:#1a3a6b">CARZE Contratistas Generales S.A.C.</div>
+            <div style="font-size:8.5pt;color:#64748b;margin-top:2px">Reporte de Cotizaciones</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:7.5pt;color:#64748b">Generado el:</div>
+          <div id="pdfFechaGen" style="font-size:8pt;font-weight:700;color:#1e293b"></div>
+          <div id="pdfUsuarioGen" style="font-size:7.5pt;color:#64748b;margin-top:2px"></div>
+        </div>
+      </div>
+      <div id="pdfResumen" style="display:flex;gap:18px;margin-top:10px;padding:8px 12px;background:#f8fafc;border-radius:8px;border:1px solid #e4e8ef"></div>
+    </div>
+
+    <!-- PDF FOOTER (solo visible al imprimir) -->
+    <div id="pdfFooter" style="margin-top:14px;padding-top:8px;border-top:1px solid #e4e8ef;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:7pt;color:#94a3b8">CARZE Contratistas Generales S.A.C. — Documento generado automáticamente</span>
+      <span id="pdfTotalRegistros" style="font-size:7pt;color:#64748b;font-weight:700"></span>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por N°, cliente, descripción..." oninput="aplicarFiltros()">
+      </div>
+      <select class="filter-select" id="filterEstado" onchange="aplicarFiltros()">
+        <option value="">Todos los estados</option>
+        <option value="Pendiente">⏳ Pendiente</option>
+        <option value="Facturado">✅ Facturado</option>
+        <option value="Anulado">🚫 Anulado</option>
+        <option value="Observado">⚠️ Observado</option>
+      </select>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="abrirModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ingresar
+      </button>
+      <button class="btn btn-edit" id="btnEditar" onclick="editarSeleccionado()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
+      <button class="btn btn-pdf" onclick="generarPDF()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+      </button>
+    </div>
+
+    <!-- STATUS CARDS -->
+    <div class="status-cards">
+      <div class="sc" onclick="filtrarPorEstado('Pendiente',this)"><div class="sc-icon">⏳</div><div><div class="sc-label">Pendiente</div><div class="sc-count" id="cnt-pendiente">0</div><div class="sc-amount" id="mnt-pendiente">S/ 0.00</div></div></div>
+      <div class="sc" onclick="filtrarPorEstado('Facturado',this)"><div class="sc-icon">✅</div><div><div class="sc-label">Facturado</div><div class="sc-count" id="cnt-facturado">0</div><div class="sc-amount" id="mnt-facturado">S/ 0.00</div></div></div>
+      <div class="sc" onclick="filtrarPorEstado('Anulado',this)"><div class="sc-icon">🚫</div><div><div class="sc-label">Anulado</div><div class="sc-count" id="cnt-anulado">0</div><div class="sc-amount" id="mnt-anulado">S/ 0.00</div></div></div>
+      <div class="sc" onclick="filtrarPorEstado('Observado',this)"><div class="sc-icon">⚠️</div><div><div class="sc-label">Observado</div><div class="sc-count" id="cnt-observado">0</div><div class="sc-amount" id="mnt-observado">S/ 0.00</div></div></div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-wrap">
+      <div class="table-hbar">
+        <span>Registros</span>
+        <span class="tcount" id="tableCount">0 registros</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th onclick="ordenar('num')">N° <span class="sort-icon" id="sort-num">↕</span></th>
+            <th onclick="ordenar('fecha')">Fecha <span class="sort-icon" id="sort-fecha">↕</span></th>
+            <th onclick="ordenar('zona')">Zona <span class="sort-icon" id="sort-zona">↕</span></th>
+            <th onclick="ordenar('cliente')">Cliente <span class="sort-icon" id="sort-cliente">↕</span></th>
+            <th onclick="ordenar('desc')">Descripción <span class="sort-icon" id="sort-desc">↕</span></th>
+            <th>Cotización</th><th>Informe</th><th>Acta</th><th>Guía</th><th>O.C.</th>
+            <th onclick="ordenar('hes')">HES <span class="sort-icon" id="sort-hes">↕</span></th>
+            <th>Factura</th>
+            <th onclick="ordenar('subtotal')">Sub Total <span class="sort-icon" id="sort-subtotal">↕</span></th>
+            <th onclick="ordenar('estado')">Estado <span class="sort-icon" id="sort-estado">↕</span></th>
+            <th>Acciones</th>
+          </tr></thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState">
+        <div class="ei">📋</div>
+        <p>No hay cotizaciones registradas. Usa <strong>+ Ingresar</strong> para agregar la primera.</p>
+      </div>
+      <!-- PAGINACIÓN -->
+      <div class="pagination" id="paginacion" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="pag-info" id="pagInfo"></span>
+          <select class="pag-size" onchange="cambiarTamano(this.value)">
+            <option value="10">10 por página</option>
+            <option value="20">20 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+        <div class="pag-btns" id="pagBtns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<img src="img/mascota_carze.png" alt="" class="mascota" onerror="this.style.display='none'">
+<div class="toast" id="toast"></div>
+
+<!-- MODAL COTIZACIÓN -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+<div class="modal" id="modal">
+  <div class="modal-head">
+    <h2 id="modalTitle">Nueva <span>Cotización</span></h2>
+    <button class="modal-close" onclick="cerrarModal()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <!-- IZQUIERDA -->
+      <div class="col-left">
+        <div class="form-section-title">Datos Generales</div>
+        <div class="frow"><label>N°</label><input class="finput" id="fNum" readonly placeholder="Auto"></div>
+        <div class="frow"><label>Fecha <span class="req">*</span></label><input class="finput" id="fFecha" type="date"></div>
+        <div class="frow"><label>Descripción <span class="req">*</span></label><textarea class="ftextarea" id="fDesc" placeholder="Descripción del servicio o suministro"></textarea></div>
+        <div class="frow">
+          <label>Cliente <span class="req">*</span></label>
+          <select class="fselect" id="fCliente">
+            <option value="">— Seleccionar —</option>
+            <option>Sodimac</option><option>Maestro</option><option>TopyTop</option>
+            <option>Footloose</option><option>Falabella</option><option>Tottus</option>
+            <option>Open Plaza</option><option>Precio Uno</option><option>Oechsle</option>
+            <option>Samsung</option><option>Mall Plaza</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>Zona <span class="req">*</span></label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select class="fselect" id="fZona" style="flex:1">
+              <option value="">— Seleccionar —</option>
+            </select>
+            <button type="button" onclick="abrirModalZona()" title="Agregar nueva zona"
+              style="width:36px;height:36px;flex-shrink:0;background:var(--naranja);border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:all .2s"
+              onmouseover="this.style.background='var(--naranja2)'" onmouseout="this.style.background='var(--naranja)'">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="frow">
+          <label>Estado <span class="req">*</span></label>
+          <select class="fselect" id="fEstado">
+            <option value="">— Seleccionar —</option>
+            <option>Pendiente</option><option>Facturado</option>
+            <option>Anulado</option><option>Observado</option>
+          </select>
+        </div>
+        <div class="frow"><label>HES</label><input class="finput" id="fHES" type="number" placeholder="Código numérico" min="0"></div>
+      </div>
+      <!-- CENTRO -->
+      <div class="col-center">
+        <div class="form-section-title">Cálculo Económico</div>
+        <div class="frow"><label>Sub Total (S/) <span class="req">*</span></label><input class="finput" id="fSubTotal" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcular()"></div>
+        <div class="frow">
+          <label>Condición <span class="req">*</span></label>
+          <select class="fselect" id="fCondicion" onchange="calcular()">
+            <option value="">— Seleccionar —</option>
+            <option>Suministro</option><option>Servicio</option>
+          </select>
+        </div>
+        <div style="background:var(--light);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:13px">
+          <div class="calc-row" style="margin-bottom:8px">
+            <div><div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">IGV (18%)</div><input class="finput" id="fIGV" readonly placeholder="0.00"></div>
+            <div><div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Total</div><input class="finput" id="fTotal" readonly placeholder="0.00"></div>
+          </div>
+          <div class="calc-row">
+            <div><div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Descuento Ley</div><input class="finput" id="fDetraccion" readonly placeholder="0.00"></div>
+            <div><div style="font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Ingreso Neto</div><input class="finput" id="fIngresoNeto" readonly placeholder="0.00"></div>
+          </div>
+        </div>
+        <div style="font-size:.68rem;color:var(--muted);line-height:1.6;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px">
+          <strong style="color:#92400e">Regla de cálculo:</strong><br>
+          • <b>Suministro:</b> Detracción = 3% del Total<br>
+          • <b>Servicio ≥ S/700:</b> Detracción = 12% del Total<br>
+          • <b>Servicio &lt; S/700:</b> Sin detracción
+        </div>
+      </div>
+      <!-- DERECHA -->
+      <div class="col-right">
+        <div class="form-section-title">📁 Gestión Documental</div>
+        <p style="font-size:.67rem;color:var(--muted);margin-bottom:11px;line-height:1.5">Selecciona el archivo PDF — se sube a Firebase Storage automáticamente.</p>
+        <div id="docFields"></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn-save" id="btnGuardar" onclick="guardar()"><span id="btnGuardarTxt">INGRESAR</span></button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">¿Eliminar cotización?</div>
+    <div class="confirm-msg" id="confirmMsg">Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="cerrarConfirm()">Cancelar</button>
+      <button class="confirm-ok" id="confirmOkBtn">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, collection, query, orderBy,
+         onSnapshot, addDoc, updateDoc, deleteDoc, getDocs,
+         doc, serverTimestamp }  from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getStorage, ref as sRef,
+         uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
+
+const firebaseConfig = {
+    apiKey:"AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:"gestioncarze.firebaseapp.com",
+    projectId:"gestioncarze",
+    storageBucket:"gestioncarze.firebasestorage.app",
+    messagingSenderId:"487407475826",
+    appId:"1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+const COL     = 'cotizaciones';
+const COL_ZONAS = 'zonas';
+
+var zonas = [];
+const ZONAS_BASE = ['Cajamarca','Chiclayo','Pucallpa','Chepén','Pacasmayo','Piura','Sullana','Trujillo','Chulucanas','Chimbote','Ferreñafe','Huánuco'];
+
+// ── ESTADO ────────────────────────────────────────────────────
+var datos          = [];
+var datosFiltrados = [];
+var filaEdit       = null;
+var filaSelec      = null;
+var pagActual      = 1;
+var tamPag         = 10;
+var sortCol        = null;
+var sortAsc        = true;
+var uploadState    = {};
+
+const DOC_FIELDS = [
+    {key:'cot',  emoji:'📋', label:'Cotización',           hint:'Ej: EG07-167'},
+    {key:'inf',  emoji:'📄', label:'Informe',              hint:'Nombre del informe'},
+    {key:'acta', emoji:'✅', label:'Acta',                 hint:'Nombre del acta'},
+    {key:'guia', emoji:'🚚', label:'Guía',                 hint:'Nombre de la guía'},
+    {key:'oc',   emoji:'🛒', label:'Orden de Compra (OC)', hint:'Nombre de la OC'},
+    {key:'fact', emoji:'🧾', label:'Factura',              hint:'Nombre de la factura'},
+];
+
+// ── SESIÓN ────────────────────────────────────────────────────
+(function(){
+    if(sessionStorage.getItem('carze_logged')!=='true') window.location.replace('index.html');
+})();
+
+window.addEventListener('DOMContentLoaded', function(){
+    var nombre = sessionStorage.getItem('carze_nombre') || 'Usuario';
+    document.getElementById('userName').textContent  = nombre;
+    document.getElementById('avatarInitials').textContent =
+        nombre.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase() || 'U';
+    document.getElementById('fFecha').value = hoy();
+    cargarZonas();
+    buildDocFields();
+    iniciarListener();
+});
+
+// ── LISTENER TIEMPO REAL ──────────────────────────────────────
+function iniciarListener(){
+    document.getElementById('tablaBody').innerHTML =
+        '<tr><td colspan="15" style="text-align:center;padding:28px;color:var(--muted);font-size:.8rem">⏳ Conectando...</td></tr>';
+    const q = query(collection(db, COL), orderBy('num','asc'));
+    onSnapshot(q, function(snap){
+        datos = snap.docs.map(function(d){ var r=d.data(); r._id=d.id; return r; });
+        actualizarContadores(datos);
+        aplicarFiltros();
+    }, function(err){ toast('Error: '+err.message,'err'); });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function hoy(){var d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function p2(n){return n<10?'0'+n:String(n);}
+function fmt(n){return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(v){return(v!=null&&v!==''&&v!=='-'&&v!=='—')?String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'—';}
+function fmtF(v){
+    if(!v||v==='-'||v==='—') return '—';
+    var s=String(v).trim();
+    if(s.match(/^\d{4}-\d{2}-\d{2}/)){var p=s.substring(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+    return s;
+}
+function normF(s){
+    if(!s) return '';
+    if(s.match(/^\d{4}-\d{2}-\d{2}/)) return s.substring(0,10);
+    if(s.match(/^\d{2}\/\d{2}\/\d{4}/)){var p=s.split('/');return p[2]+'-'+p[1]+'-'+p[0];}
+    return s;
+}
+function toast(msg,tipo){
+    var t=document.getElementById('toast');
+    t.textContent=msg; t.className='toast '+(tipo||'ok'); t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');},3200);
+}
+function docLink(nombre,link){
+    if(!nombre||nombre==='-'||nombre==='—') return '<span style="color:#94a3b8">—</span>';
+    if(link&&link!=='-'&&link!=='—')
+        return '<a class="doc-link" href="'+String(link).replace(/"/g,'&quot;')+'" target="_blank" rel="noopener">'+
+               String(nombre).replace(/</g,'&lt;')+'</a>';
+    return String(nombre).replace(/</g,'&lt;');
+}
+function pillEstado(e){
+    var k=(e||'').toLowerCase();
+    var c={pendiente:'pendiente',facturado:'facturado',anulado:'anulado',observado:'observado'}[k]||'pendiente';
+    return '<span class="pill '+c+'"><span class="pill-dot"></span>'+esc(e)+'</span>';
+}
+
+// ── FILTROS ───────────────────────────────────────────────────
+function aplicarFiltros(){
+    var q  = document.getElementById('searchInput').value.toLowerCase().trim();
+    var est= document.getElementById('filterEstado').value;
+    if(!est) document.querySelectorAll('.sc').forEach(function(c){c.classList.remove('active-filter');});
+    datosFiltrados = datos.filter(function(r){
+        var mQ = !q||Object.values(r).some(function(v){return String(v).toLowerCase().includes(q);});
+        var mE = !est||(r.estado||'').toLowerCase()===est.toLowerCase();
+        return mQ&&mE;
+    });
+    if(sortCol) aplicarOrden();
+    pagActual=1; renderTabla(datosFiltrados);
+}
+window.aplicarFiltros = aplicarFiltros;
+
+function filtrarPorEstado(estado,card){
+    var sel=document.getElementById('filterEstado');
+    if(sel.value===estado){sel.value='';}
+    else{sel.value=estado;document.querySelectorAll('.sc').forEach(function(c){c.classList.remove('active-filter');});card.classList.add('active-filter');}
+    aplicarFiltros();
+}
+window.filtrarPorEstado = filtrarPorEstado;
+
+function ordenar(col){
+    if(sortCol===col){sortAsc=!sortAsc;}else{sortCol=col;sortAsc=true;}
+    document.querySelectorAll('.sort-icon').forEach(function(i){i.textContent='↕';});
+    var ic=document.getElementById('sort-'+col); if(ic) ic.textContent=sortAsc?'↑':'↓';
+    aplicarOrden(); pagActual=1; renderTabla(datosFiltrados);
+}
+window.ordenar = ordenar;
+
+function aplicarOrden(){
+    datosFiltrados.sort(function(a,b){
+        var va=a[sortCol]||'',vb=b[sortCol]||'';
+        if(sortCol==='subtotal'){return sortAsc?parseFloat(va)-parseFloat(vb):parseFloat(vb)-parseFloat(va);}
+        if(sortCol==='num'){return sortAsc?parseInt(va)-parseInt(vb):parseInt(vb)-parseInt(va);}
+        if(sortCol==='fecha'){va=normF(String(va));vb=normF(String(vb));}
+        va=String(va).toLowerCase();vb=String(vb).toLowerCase();
+        return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    });
+}
+
+// ── RENDER TABLA ──────────────────────────────────────────────
+function renderTabla(data){
+    var tbody=document.getElementById('tablaBody');
+    var empty=document.getElementById('emptyState');
+    var count=document.getElementById('tableCount');
+    var pag  =document.getElementById('paginacion');
+    tbody.innerHTML='';
+    if(!data||!data.length){empty.style.display='flex';count.textContent='0 registros';pag.style.display='none';return;}
+    empty.style.display='none';
+    count.textContent=data.length+' registro'+(data.length!==1?'s':'');
+    var totalP=Math.ceil(data.length/tamPag);
+    if(pagActual>totalP) pagActual=1;
+    var ini=(pagActual-1)*tamPag, fin=Math.min(ini+tamPag,data.length);
+    data.slice(ini,fin).forEach(function(row){
+        var est=(row.estado||'').toLowerCase();
+        var cls={pendiente:'row-pendiente',facturado:'row-facturado',anulado:'row-anulado',observado:'row-observado'}[est]||'';
+        var tr=document.createElement('tr');
+        tr.className=cls; tr.dataset.docId=row._id;
+        tr.onclick=function(e){if(!e.target.classList.contains('btn-del'))seleccionar(this,row._id);};
+        tr.innerHTML=
+            '<td>'+esc(row.num)+'</td>'+
+            '<td>'+fmtF(row.fecha)+'</td>'+
+            '<td>'+esc(row.zona)+'</td>'+
+            '<td>'+esc(row.cliente)+'</td>'+
+            '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="'+(row.desc||'')+'">'+esc(row.desc)+'</td>'+
+            '<td>'+docLink(row.cotNombre,row.cotLink)+'</td>'+
+            '<td>'+docLink(row.infNombre,row.infLink)+'</td>'+
+            '<td>'+docLink(row.actaNombre,row.actaLink)+'</td>'+
+            '<td>'+docLink(row.guiaNombre,row.guiaLink)+'</td>'+
+            '<td>'+docLink(row.ocNombre,row.ocLink)+'</td>'+
+            '<td>'+esc(row.hes)+'</td>'+
+            '<td>'+docLink(row.factNombre,row.factLink)+'</td>'+
+            '<td>S/ '+fmt(row.subtotal)+'</td>'+
+            '<td>'+pillEstado(row.estado)+'</td>'+
+            '<td><button class="btn-del" onclick="pedirEliminar(\''+row._id+'\',\''+esc(row.cliente)+'\')">🗑️</button></td>';
+        tbody.appendChild(tr);
+    });
+    if(data.length>tamPag){
+        pag.style.display='flex';
+        document.getElementById('pagInfo').textContent='Mostrando '+(ini+1)+'-'+fin+' de '+data.length;
+        renderPags(totalP);
+    } else { pag.style.display='none'; }
+    filaSelec=null; document.getElementById('btnEditar').disabled=true;
+}
+
+function renderPags(total){
+    var c=document.getElementById('pagBtns'); c.innerHTML='';
+    var prev=document.createElement('button');
+    prev.className='pag-btn';prev.textContent='‹';prev.disabled=pagActual===1;
+    prev.onclick=function(){if(pagActual>1){pagActual--;renderTabla(datosFiltrados);}};
+    c.appendChild(prev);
+    var rng=[];
+    for(var i=1;i<=total;i++){
+        if(i===1||i===total||Math.abs(i-pagActual)<=2) rng.push(i);
+        else if(rng[rng.length-1]!=='…') rng.push('…');
+    }
+    rng.forEach(function(p){
+        if(p==='…'){var s=document.createElement('button');s.className='pag-btn';s.textContent='…';s.disabled=true;c.appendChild(s);return;}
+        var b=document.createElement('button');
+        b.className='pag-btn'+(p===pagActual?' active':'');b.textContent=p;
+        b.onclick=(function(pp){return function(){pagActual=pp;renderTabla(datosFiltrados);};})(p);
+        c.appendChild(b);
+    });
+    var next=document.createElement('button');
+    next.className='pag-btn';next.textContent='›';next.disabled=pagActual===total;
+    next.onclick=function(){if(pagActual<total){pagActual++;renderTabla(datosFiltrados);}};
+    c.appendChild(next);
+}
+
+function cambiarTamano(val){tamPag=parseInt(val);pagActual=1;renderTabla(datosFiltrados);}
+window.cambiarTamano = cambiarTamano;
+
+function actualizarContadores(data){
+    var e={pendiente:{c:0,m:0},facturado:{c:0,m:0},anulado:{c:0,m:0},observado:{c:0,m:0}};
+    data.forEach(function(r){var k=(r.estado||'').toLowerCase();if(e[k]){e[k].c++;e[k].m+=parseFloat(r.subtotal)||0;}});
+    ['pendiente','facturado','anulado','observado'].forEach(function(k){
+        document.getElementById('cnt-'+k).textContent=e[k].c;
+        document.getElementById('mnt-'+k).textContent='S/ '+fmt(e[k].m);
+    });
+}
+
+function seleccionar(tr,docId){
+    document.querySelectorAll('#tablaBody tr').forEach(function(r){r.classList.remove('row-selected');});
+    tr.classList.add('row-selected'); filaSelec=docId;
+    document.getElementById('btnEditar').disabled=false;
+}
+
+// ── GESTIÓN DOCUMENTAL ────────────────────────────────────────
+function buildDocFields(){
+    var cont=document.getElementById('docFields'); if(!cont) return;
+    cont.innerHTML='';
+    DOC_FIELDS.forEach(function(f){
+        var d=document.createElement('div');
+        d.className='doc-section'; d.style.marginBottom='10px';
+        d.innerHTML=
+            '<div class="doc-section-label"><span>'+f.emoji+'</span>'+f.label+'</div>'+
+            '<div class="upload-box" id="box-'+f.key+'">'+
+                '<input type="file" accept=".pdf,.png,.jpg,.jpeg" onchange="handleFile(event,\''+f.key+'\')">'+
+                '<div class="upload-label">'+
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+
+                    '<span>Click para subir PDF</span>'+
+                '</div>'+
+                '<div class="upload-name" id="uname-'+f.key+'" style="display:none;font-size:.71rem;color:var(--azul2);font-weight:600;margin-top:3px"></div>'+
+                '<div class="upload-prog" id="uprog-'+f.key+'" style="display:none;height:3px;background:var(--border);border-radius:3px;margin-top:5px;overflow:hidden">'+
+                    '<div id="uprogfill-'+f.key+'" style="height:100%;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:3px;width:0%;transition:width .2s"></div>'+
+                '</div>'+
+                '<div id="ust-'+f.key+'" style="font-size:.62rem;margin-top:2px"></div>'+
+            '</div>'+
+            '<div id="exist-'+f.key+'" style="display:none;font-size:.68rem;color:var(--azul2);margin-top:4px;align-items:center;gap:5px">'+
+                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'+
+                '<a id="existlink-'+f.key+'" href="#" target="_blank" rel="noopener" style="color:var(--azul2);text-decoration:underline;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></a>'+
+                '<span onclick="removeDoc(\''+f.key+'\')" style="cursor:pointer;color:#dc2626;font-size:.65rem;margin-left:auto;padding:1px 6px;border:1px solid #fecaca;border-radius:4px;background:#fff1f2">✕ Quitar</span>'+
+            '</div>';
+        cont.appendChild(d);
+    });
+}
+
+function handleFile(event, key){
+    var file=event.target.files[0]; if(!file) return;
+    var ext=file.name.split('.').pop();
+    var num=document.getElementById('fNum').value||'doc';
+    var path='cotizaciones/'+num+'_'+key+'_'+Date.now()+'.'+ext;
+    var storRef=sRef(storage,path);
+    document.getElementById('uname-'+key).textContent=file.name;
+    document.getElementById('uname-'+key).style.display='block';
+    document.getElementById('uprog-'+key).style.display='block';
+    var fill=document.getElementById('uprogfill-'+key);
+    var st=document.getElementById('ust-'+key);
+    st.style.color='var(--azul2)'; st.textContent='Subiendo...';
+    var task=uploadBytesResumable(storRef,file);
+    task.on('state_changed',
+        function(snap){fill.style.width=Math.round(snap.bytesTransferred/snap.totalBytes*100)+'%';},
+        function(err){st.style.color='#dc2626';st.textContent='Error: '+err.message;},
+        function(){
+            getDownloadURL(task.snapshot.ref).then(function(url){
+                uploadState[key]={nombre:file.name,url:url};
+                st.style.color='#16a34a'; st.textContent='✓ Subido correctamente';
+                var eDiv=document.getElementById('exist-'+key);
+                var eLink=document.getElementById('existlink-'+key);
+                eLink.href=url; eLink.textContent=file.name;
+                eDiv.style.display='flex';
+            });
+        }
+    );
+}
+window.handleFile = handleFile;
+
+function removeDoc(key){
+    delete uploadState[key];
+    document.getElementById('exist-'+key).style.display='none';
+    document.getElementById('uname-'+key).style.display='none';
+    document.getElementById('uprog-'+key).style.display='none';
+    document.getElementById('ust-'+key).textContent='';
+    var inp=document.getElementById('box-'+key).querySelector('input[type=file]');
+    if(inp) inp.value='';
+}
+window.removeDoc = removeDoc;
+
+function resetDocs(){uploadState={};DOC_FIELDS.forEach(function(f){removeDoc(f.key);});}
+
+function cargarDocsExistentes(row){
+    resetDocs();
+    DOC_FIELDS.forEach(function(f){
+        var nombre=row[f.key+'Nombre'], url=row[f.key+'Link'];
+        if(nombre&&nombre!=='-'&&url&&url!=='-'){
+            uploadState[f.key]={nombre:nombre,url:url};
+            var eDiv=document.getElementById('exist-'+f.key);
+            var eLink=document.getElementById('existlink-'+f.key);
+            if(eDiv&&eLink){eLink.href=url;eLink.textContent=nombre;eDiv.style.display='flex';}
+        }
+    });
+}
+
+function gDoc(key){return(uploadState[key]&&uploadState[key].nombre)?uploadState[key].nombre:'-';}
+function gLink(key){return(uploadState[key]&&uploadState[key].url)?uploadState[key].url:'-';}
+
+// ── CÁLCULOS ──────────────────────────────────────────────────
+function calcular(){
+    var sub=parseFloat(document.getElementById('fSubTotal').value)||0;
+    var cond=document.getElementById('fCondicion').value;
+    var igv=Math.round(sub*0.18*100)/100;
+    var total=Math.round((sub+igv)*100)/100;
+    var det=0;
+    if(cond==='Suministro') det=Math.round(total*0.03*100)/100;
+    else if(cond==='Servicio') det=total>=700?Math.round(total*0.12):0;
+    var neto=Math.round((total-det)*100)/100;
+    document.getElementById('fIGV').value=fmt(igv);
+    document.getElementById('fTotal').value=fmt(total);
+    document.getElementById('fDetraccion').value=fmt(det);
+    document.getElementById('fIngresoNeto').value=fmt(neto);
+}
+window.calcular = calcular;
+
+function genNum(){
+    if(!datos.length){document.getElementById('fNum').value='001';return;}
+    var max=Math.max.apply(null,datos.map(function(r){return parseInt(r.num)||0;}));
+    document.getElementById('fNum').value=String(max+1).padStart(3,'0');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function abrirModal(){
+    filaEdit=null; limpiar(); resetDocs(); genNum();
+    document.getElementById('fFecha').value=hoy();
+    document.getElementById('modalTitle').innerHTML='Nueva <span>Cotización</span>';
+    document.getElementById('btnGuardarTxt').textContent='INGRESAR';
+    document.getElementById('overlay').classList.add('open');
+}
+window.abrirModal = abrirModal;
+
+function editarSeleccionado(){
+    if(!filaSelec) return;
+    var row=datos.find(function(r){return r._id===filaSelec;}); if(!row) return;
+    filaEdit=row._id; llenar(row);
+    document.getElementById('modalTitle').innerHTML='Editar <span>Cotización</span>';
+    document.getElementById('btnGuardarTxt').textContent='ACTUALIZAR';
+    document.getElementById('overlay').classList.add('open');
+    cargarDocsExistentes(row); calcular();
+}
+window.editarSeleccionado = editarSeleccionado;
+
+function llenar(r){
+    document.getElementById('fNum').value     =r.num||'';
+    document.getElementById('fFecha').value   =normF(String(r.fecha||''));
+    document.getElementById('fDesc').value    =r.desc||'';
+    document.getElementById('fCliente').value =r.cliente||'';
+    document.getElementById('fZona').value    =r.zona||'';
+    document.getElementById('fEstado').value  =r.estado||'';
+    document.getElementById('fHES').value     =r.hes&&r.hes!=='-'?r.hes:'';
+    document.getElementById('fSubTotal').value=r.subtotal||'';
+    document.getElementById('fCondicion').value='';
+}
+
+function limpiar(){
+    ['fNum','fFecha','fDesc','fHES','fSubTotal','fIGV','fTotal','fDetraccion','fIngresoNeto']
+        .forEach(function(id){document.getElementById(id).value='';});
+    ['fCliente','fZona','fEstado','fCondicion']
+        .forEach(function(id){document.getElementById(id).value='';});
+}
+
+function cerrarModal(){document.getElementById('overlay').classList.remove('open');}
+window.cerrarModal = cerrarModal;
+function overlayClick(e){if(e.target===document.getElementById('overlay'))cerrarModal();}
+window.overlayClick = overlayClick;
+
+// ── GUARDAR ───────────────────────────────────────────────────
+async function guardar(){
+    var fecha  =document.getElementById('fFecha').value;
+    var desc   =document.getElementById('fDesc').value.trim();
+    var cliente=document.getElementById('fCliente').value;
+    var zona   =document.getElementById('fZona').value;
+    var estado =document.getElementById('fEstado').value;
+    var sub    =document.getElementById('fSubTotal').value;
+    var cond   =document.getElementById('fCondicion').value;
+    if(!fecha||!desc||!cliente||!zona||!estado||!sub||!cond){
+        toast('Completa todos los campos obligatorios (*)','err'); return;
+    }
+    var btn=document.getElementById('btnGuardar');
+    var txt=document.getElementById('btnGuardarTxt');
+    btn.disabled=true; txt.innerHTML='<span class="spinner"></span>';
+    var docData={
+        num:       document.getElementById('fNum').value,
+        fecha:fecha, zona:zona, cliente:cliente, desc:desc,
+        cotNombre: gDoc('cot'),  cotLink:  gLink('cot'),
+        infNombre: gDoc('inf'),  infLink:  gLink('inf'),
+        actaNombre:gDoc('acta'), actaLink: gLink('acta'),
+        guiaNombre:gDoc('guia'), guiaLink: gLink('guia'),
+        ocNombre:  gDoc('oc'),   ocLink:   gLink('oc'),
+        hes:       document.getElementById('fHES').value.trim()||'-',
+        factNombre:gDoc('fact'), factLink: gLink('fact'),
+        subtotal:  parseFloat(sub)||0,
+        estado:estado, updatedAt:serverTimestamp()
+    };
+    try{
+        if(filaEdit){
+            await updateDoc(doc(db,COL,filaEdit),docData);
+            toast('Cotización actualizada ✓','ok');
+        } else {
+            docData.createdAt=serverTimestamp();
+            await addDoc(collection(db,COL),docData);
+            toast('Cotización guardada ✓','ok');
+        }
+        btn.disabled=false; txt.textContent=filaEdit?'ACTUALIZAR':'INGRESAR';
+        cerrarModal();
+    } catch(err){
+        btn.disabled=false; txt.textContent=filaEdit?'ACTUALIZAR':'INGRESAR';
+        toast('Error: '+err.message,'err');
+    }
+}
+window.guardar = guardar;
+
+// ── ELIMINAR ──────────────────────────────────────────────────
+var pendingDel=null;
+function pedirEliminar(docId,cliente){
+    pendingDel=docId;
+    document.getElementById('confirmMsg').textContent='Se eliminará la cotización de "'+cliente+'". Esta acción no se puede deshacer.';
+    document.getElementById('confirmOverlay').classList.add('open');
+    document.getElementById('confirmOkBtn').onclick=ejecutarEliminar;
+}
+window.pedirEliminar = pedirEliminar;
+function cerrarConfirm(){document.getElementById('confirmOverlay').classList.remove('open');pendingDel=null;}
+window.cerrarConfirm = cerrarConfirm;
+async function ejecutarEliminar(){
+    if(!pendingDel) return; cerrarConfirm();
+    try{await deleteDoc(doc(db,COL,pendingDel));toast('Cotización eliminada','warn');}
+    catch(err){toast('Error: '+err.message,'err');}
+}
+
+// ── PDF ───────────────────────────────────────────────────────
+function generarPDF(){
+    if(!datosFiltrados.length){toast('No hay registros para exportar','warn');return;}
+    var ahora=new Date();
+    var fs=p2(ahora.getDate())+'/'+p2(ahora.getMonth()+1)+'/'+ahora.getFullYear()+
+           '  '+p2(ahora.getHours())+':'+p2(ahora.getMinutes())+':'+p2(ahora.getSeconds());
+    document.getElementById('pdfFechaGen').textContent=fs;
+    document.getElementById('pdfUsuarioGen').textContent='Usuario: '+(sessionStorage.getItem('carze_nombre')||'—');
+    document.getElementById('pdfTotalRegistros').textContent='Total: '+datosFiltrados.length+' registros';
+    var e2={Pendiente:{c:0,m:0},Facturado:{c:0,m:0},Anulado:{c:0,m:0},Observado:{c:0,m:0}};
+    datosFiltrados.forEach(function(r){var k=r.estado||'';if(e2[k]){e2[k].c++;e2[k].m+=parseFloat(r.subtotal)||0;}});
+    var cols={Pendiente:'#f59e0b',Facturado:'#16a34a',Anulado:'#9333ea',Observado:'#dc2626'};
+    var res='';
+    Object.keys(e2).forEach(function(k){
+        res+='<div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:'+cols[k]+';display:inline-block"></span>'+
+             '<span style="font-size:7.5pt;font-weight:700;color:#1e293b">'+k+':</span>'+
+             '<span style="font-size:7.5pt;color:#64748b">'+e2[k].c+' — S/ '+fmt(e2[k].m)+'</span></div>';
+    });
+    document.getElementById('pdfResumen').innerHTML=res;
+    var pg=pagActual, tm=tamPag;
+    tamPag=99999; pagActual=1; renderTabla(datosFiltrados);
+    setTimeout(function(){window.print();tamPag=tm;pagActual=pg;renderTabla(datosFiltrados);},300);
+}
+window.generarPDF = generarPDF;
+
+
+// ── ZONAS ─────────────────────────────────────────────────────
+async function cargarZonas(){
+    try {
+        const snap = await getDocs(collection(db, COL_ZONAS));
+        if(snap.empty){
+            for(var z of ZONAS_BASE){
+                await addDoc(collection(db, COL_ZONAS), {nombre:z});
+            }
+            zonas = [...ZONAS_BASE];
+        } else {
+            zonas = snap.docs.map(function(d){return d.data().nombre;});
+            zonas.sort();
+        }
+    } catch(e){ zonas = [...ZONAS_BASE]; }
+    poblarSelectZona();
+}
+
+function poblarSelectZona(){
+    var sel = document.getElementById('fZona');
+    var valorActual = sel.value;
+    sel.innerHTML = '<option value="">— Seleccionar —</option>';
+    zonas.forEach(function(z){
+        var op = document.createElement('option');
+        op.value = z; op.textContent = z;
+        sel.appendChild(op);
+    });
+    if(valorActual) sel.value = valorActual;
+}
+
+function abrirModalZona(){
+    document.getElementById('zonaInput').value = '';
+    var overlay = document.getElementById('zonaOverlay');
+    var modal   = document.getElementById('zonaModal');
+    overlay.style.opacity='1'; overlay.style.pointerEvents='all';
+    modal.style.transform='translateY(0) scale(1)';
+    modal.style.opacity='1';
+    setTimeout(function(){ document.getElementById('zonaInput').focus(); }, 200);
+}
+window.abrirModalZona = abrirModalZona;
+
+function cerrarModalZona(){
+    var overlay = document.getElementById('zonaOverlay');
+    var modal   = document.getElementById('zonaModal');
+    overlay.style.opacity='0'; overlay.style.pointerEvents='none';
+    modal.style.opacity='0'; modal.style.transform='translateY(20px) scale(.97)';
+}
+window.cerrarModalZona = cerrarModalZona;
+
+async function guardarZona(){
+    var nombre = document.getElementById('zonaInput').value.trim();
+    if(!nombre){ toast('Escribe el nombre de la zona','err'); return; }
+    if(zonas.map(function(z){return z.toLowerCase();}).includes(nombre.toLowerCase())){
+        toast('Esa zona ya existe','warn'); return;
+    }
+    var btn = document.getElementById('zonaBtnTxt');
+    btn.innerHTML = '<span class="spinner"></span>';
+    try {
+        await addDoc(collection(db, COL_ZONAS), {nombre: nombre});
+        zonas.push(nombre); zonas.sort();
+        poblarSelectZona();
+        document.getElementById('fZona').value = nombre;
+        toast('Zona "'+nombre+'" agregada ✓','ok');
+        cerrarModalZona();
+    } catch(err){ toast('Error: '+err.message,'err'); }
+    btn.textContent = 'GUARDAR ZONA';
+}
+window.guardarZona = guardarZona;
+
+function cerrarSesion(){sessionStorage.clear();window.location.replace('index.html');}
+window.cerrarSesion = cerrarSesion;
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){cerrarModal();cerrarConfirm();}});
+</script>
+
+<!-- MODAL NUEVA ZONA -->
+<div id="zonaOverlay" onclick="if(event.target===this)cerrarModalZona()"
+  style="position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s">
+  <div style="background:#fff;border-radius:16px;width:90%;max-width:400px;box-shadow:0 30px 80px rgba(0,0,0,.25);transform:translateY(20px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;position:relative" id="zonaModal">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:16px 16px 0 0"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px">
+      <div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--azul)">Nueva <span style="color:var(--naranja)">Zona</span></div>
+      <button onclick="cerrarModalZona()" style="width:32px;height:32px;background:var(--light);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted)" onmouseover="this.style.background='#fff1f2';this.style.color='#dc2626'" onmouseout="this.style.background='var(--light)';this.style.color='var(--muted)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:0 22px 22px">
+      <div class="frow">
+        <label>Nombre de la Zona <span class="req">*</span></label>
+        <input class="finput" id="zonaInput" placeholder="Ej: Lima, Arequipa..." onkeydown="if(event.key==='Enter')guardarZona()">
+      </div>
+    </div>
+    <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn-cancel" onclick="cerrarModalZona()">Cancelar</button>
+      <button class="btn-save" onclick="guardarZona()"><span id="zonaBtnTxt">GUARDAR ZONA</span></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
