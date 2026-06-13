@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas | CARZE</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;
+}
+html,body{height:100%;font-family:'Century Gothic','CenturyGothic',Verdana,sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sidebar-logo img{width:115px}
+.sidebar-logo span{font-size:.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:var(--light);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.1),rgba(249,115,22,.04));color:var(--naranja);border-left:3px solid var(--naranja);padding-left:9px}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.content{flex:1;overflow-y:auto;padding:22px 28px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.k1::before{background:linear-gradient(90deg,var(--azul2),#818cf8)}
+.kpi-card.k2::before{background:linear-gradient(90deg,var(--rojo),#f87171)}
+.kpi-card.k3::before{background:linear-gradient(90deg,var(--verde),#86efac)}
+.kpi-card.k4::before{background:linear-gradient(90deg,var(--amarillo),#fbbf24)}
+.kpi-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.kpi-value{font-size:1.5rem;font-weight:800;margin-bottom:3px}
+.kpi-card.k1 .kpi-value{color:var(--azul2)}.kpi-card.k2 .kpi-value{color:var(--rojo)}
+.kpi-card.k3 .kpi-value{color:var(--verde)}.kpi-card.k4 .kpi-value{color:var(--amarillo)}
+.kpi-sub{font-size:.68rem;color:var(--muted)}
+.kpi-card:nth-child(1){animation-delay:.05s}.kpi-card:nth-child(2){animation-delay:.1s}
+.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:.2s}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.section-title{font-size:1rem;font-weight:800;color:var(--azul)}
+.section-title span{color:var(--naranja)}
+.btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border:none;border-radius:9px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-excel{background:var(--verde);color:#fff}.btn-excel:hover{background:#15803d;transform:translateY(-1px)}
+.resumen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:28px}
+.loan-card{background:var(--white);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s;animation:fadeUp .4s ease both}
+.loan-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.1);transform:translateY(-2px)}
+.loan-top{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.loan-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.loan-nombre{font-size:.88rem;font-weight:800;color:var(--azul);cursor:pointer}
+.loan-nombre:hover{color:var(--naranja)}
+.loan-badge{font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.badge-activo{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-pagado{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.loan-meta{font-size:.7rem;color:var(--muted);margin-bottom:8px}
+.loan-meta strong{color:var(--txt)}
+.prog-label{display:flex;justify-content:space-between;font-size:.63rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.prog-bg{height:6px;background:var(--border);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;border-radius:10px;transition:width 1s ease}
+.loan-stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border)}
+.loan-stat{padding:10px 12px;text-align:center;border-right:1px solid var(--border)}
+.loan-stat:last-child{border-right:none}
+.stat-label{font-size:.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.stat-val{font-size:.88rem;font-weight:800}
+.v-pag{color:var(--verde)}.v-pend{color:var(--rojo)}.v-cuot{color:var(--azul2)}
+.loan-foot{padding:8px 14px 12px;display:flex;align-items:center;justify-content:space-between}
+.cuota-badge{font-size:.82rem;font-weight:800;color:var(--naranja);background:#fff7ed;border:1px solid #fed7aa;padding:4px 12px;border-radius:8px}
+.ver-btn{font-size:.68rem;font-weight:700;color:var(--azul2);background:#eff6ff;border:1px solid #bfdbfe;padding:5px 12px;border-radius:8px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+.ver-btn:hover{background:var(--azul2);color:#fff;border-color:var(--azul2)}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(5px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:96%;max-width:960px;max-height:93vh;display:flex;flex-direction:column;box-shadow:0 40px 100px rgba(0,0,0,.25);transform:translateY(24px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;position:relative}
+.overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:18px 18px 0 0}
+.modal-head{padding:18px 24px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.modal-head h2{font-size:1.05rem;font-weight:800;color:var(--azul)}
+.modal-head h2 span{color:var(--naranja)}
+.modal-head p{font-size:.7rem;color:var(--muted);margin-top:2px}
+.modal-close{width:32px;height:32px;background:var(--light);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:#fff1f2;border-color:#fecdd3;color:#dc2626}
+.modal-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.mkpi{text-align:center;background:var(--light);border:1px solid var(--border);border-radius:10px;padding:9px 6px}
+.mkpi-label{font-size:.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.mkpi-val{font-size:.95rem;font-weight:800}
+.modal-tools{padding:8px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.filter-estado{display:flex;gap:6px}
+.fe-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:inherit;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s}
+.fe-btn.active-all{background:var(--azul);border-color:var(--azul);color:#fff}
+.fe-btn.active-pag{background:#dcfce7;border-color:#86efac;color:#15803d}
+.fe-btn.active-pend{background:#fef9c3;border-color:#fde68a;color:#a16207}
+.modal-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.cron-table{width:100%;border-collapse:collapse}
+.cron-table thead tr{background:var(--azul);position:sticky;top:0;z-index:5}
+.cron-table thead th{padding:9px 12px;text-align:left;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.cron-table thead th:first-child{padding-left:16px}
+.cron-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.cron-table tbody tr.r-pag{background:#f0fdf4}
+.cron-table tbody tr.r-pend{background:#fff}
+.cron-table tbody tr:hover{background:#fffbeb}
+.cron-table tbody td{padding:9px 12px;font-size:.75rem;color:var(--txt);white-space:nowrap}
+.cron-table tbody td:first-child{padding-left:16px;font-weight:700;color:var(--azul)}
+.pill-pag{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:20px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.pill-pend{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:20px;background:#fef9c3;color:#a16207;border:1px solid #fde68a}
+/* Toggle estado en tabla */
+.toggle-estado{cursor:pointer;transition:all .2s;user-select:none}
+.toggle-estado:hover{transform:scale(1.05)}
+.modal-foot{padding:10px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:8px}
+.modal-foot-info{font-size:.72rem;color:var(--muted)}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:.82rem;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#16a34a}.toast.err{background:#dc2626}.toast.warn{background:#f59e0b}
+.mascota{position:fixed;bottom:0;left:calc(var(--sw)+12px);width:86px;pointer-events:none;z-index:10;opacity:.82}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<script type="module">
+import { initializeApp, getApps, getApp }       from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+const _cfg={
+    apiKey:"AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:"gestioncarze.firebaseapp.com",
+    projectId:"gestioncarze",
+    storageBucket:"gestioncarze.firebasestorage.app",
+    messagingSenderId:"487407475826",
+    appId:"1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+const _app  = getApps().length ? getApp() : initializeApp(_cfg);
+const _auth = getAuth(_app);
+const NOMBRES={
+    'proyectos@carzesac.com':'Jans Carrillo',
+    'logistica@carzesac.com':'Edwduar Carrillo',
+    'informes@carzesac.com' :'Jhonny Carrillo',
+    'robertcz@carzesac.com' :'Robert Carrillo Zeña',
+};
+onAuthStateChanged(_auth,function(user){
+    if(!user){
+        sessionStorage.clear();
+        window.location.replace('index.html');
+        return;
+    }
+    // Llenar sessionStorage para que el script principal lo lea
+    sessionStorage.setItem('carze_logged','true');
+    sessionStorage.setItem('carze_nombre', NOMBRES[user.email]||user.email.split('@')[0]);
+    sessionStorage.setItem('carze_uid',    user.uid);
+    sessionStorage.setItem('carze_email',  user.email);
+    // Exponer signOut para el botón Cerrar Sesión
+    window.__auth   = _auth;
+    window.__signOut= signOut;
+    // Señal para que el script principal arranque
+    window.dispatchEvent(new Event('carze_auth_ready'));
+});
+</script>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/logo_carze_1.png" alt="CARZE">
+    <span>Contratistas Generales</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="cotizaciones.html" class="nav-item"><span class="nav-icon">📋</span>Cotizaciones</a>
+    <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span>Certificados</a>
+    <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span>Facturas</a>
+    <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span>Impuestos</a>
+    <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span>Personal</a>
+    <a href="finanzas.html"     class="nav-item active"><span class="nav-icon">💰</span>Finanzas</a>
+    <a href="pronto_pago.html"  class="nav-item"><span class="nav-icon">⏰</span>Pronto Pago</a>
+    <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span>Caja Diaria</a>
+    <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span>Flujo de Caja</a>
+    <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span>Vencimiento y Alertas</a>
+    <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span>Seguimiento</a>
+  </nav>
+</aside>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Gestión de Finanzas</h1>
+      <p>Cronogramas de crédito · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="kpi-row">
+      <div class="kpi-card k1"><div class="kpi-label">💳 Total Créditos</div><div class="kpi-value" id="kTotal">S/ 0</div><div class="kpi-sub" id="kTotalSub"></div></div>
+      <div class="kpi-card k2"><div class="kpi-label">⏳ Total Pendiente</div><div class="kpi-value" id="kPend">S/ 0</div><div class="kpi-sub">Por cancelar</div></div>
+      <div class="kpi-card k3"><div class="kpi-label">✅ Total Pagado</div><div class="kpi-value" id="kPag">S/ 0</div><div class="kpi-sub" id="kPagPct"></div></div>
+      <div class="kpi-card k4"><div class="kpi-label">📅 Cuota Mensual Total</div><div class="kpi-value" id="kCuota">S/ 0</div><div class="kpi-sub">Suma de todas las cuotas</div></div>
+    </div>
+    <div class="section-head">
+      <div class="section-title">Resumen de <span>Préstamos</span></div>
+      <button class="btn btn-excel" onclick="exportarResumen()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        Exportar Resumen
+      </button>
+    </div>
+    <div class="resumen-grid" id="resumenGrid"></div>
+  </div>
+</div>
+<img src="img/mascota_carze.png" alt="" class="mascota" onerror="this.style.display='none'">
+<div class="toast" id="toast"></div>
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)cerrarModal()">
+<div class="modal">
+  <div class="modal-head">
+    <div>
+      <h2 id="modalTitle">Cronograma <span>de Crédito</span></h2>
+      <p id="modalSub"></p>
+    </div>
+    <button class="modal-close" onclick="cerrarModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-kpis" id="modalKpis"></div>
+  <div class="modal-tools">
+    <div class="filter-estado">
+      <button class="fe-btn active-all" id="feAll" onclick="filtrarEstado('all')">Todas</button>
+      <button class="fe-btn" id="fePag" onclick="filtrarEstado('Pagado')">✅ Pagadas</button>
+      <button class="fe-btn" id="fePend" onclick="filtrarEstado('Pendiente')">⏳ Pendientes</button>
+    </div>
+    <span style="font-size:.7rem;color:var(--muted);margin-left:auto">💡 Click en el estado para cambiar Pagado ↔ Pendiente</span>
+  </div>
+  <div class="modal-body">
+    <table class="cron-table">
+      <thead><tr id="cronThead"></tr></thead>
+      <tbody id="cronTbody"></tbody>
+    </table>
+  </div>
+  <div class="modal-foot">
+    <span class="modal-foot-info" id="modalFootInfo"></span>
+    <button class="btn btn-excel" onclick="exportarCronograma()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Exportar Cronograma
+    </button>
+  </div>
+</div>
+</div>
+<script>
+// Auth verificado por Firebase — ver módulo auth en <head>
+
+const PRESTAMOS_BASE = [{"id":1,"nombre":"Préstamo Empresarial Interbank","entidad":"Interbank","color":"#0033a0","totalCredito":74273.92,"cuotaAmt":2902.36,"totalCuotas":30,"cuotasPagadas":21,"totalPagado":48152.68,"totalPendiente":26121.24,"cols":["N°","Fecha Vcto","Saldo Capital","Amortización","Intereses","Desgravamen","Cuota","Estado"],"tipo":"interbank_emp","cuotas":[{"n":1,"fecha":"2024-10-09","saldo":60003.0,"amort":0.0,"int":992.86,"desgrav":0.0,"cuota":992.86,"estado":"Pagado"},{"n":2,"fecha":"2024-11-08","saldo":60003.0,"amort":0.0,"int":724.88,"desgrav":0.0,"cuota":724.88,"estado":"Pagado"},{"n":3,"fecha":"2024-12-09","saldo":60003.0,"amort":0.0,"int":749.19,"desgrav":0.0,"cuota":749.19,"estado":"Pagado"},{"n":4,"fecha":"2025-01-08","saldo":60003.0,"amort":0.0,"int":724.88,"desgrav":0.0,"cuota":724.88,"estado":"Pagado"},{"n":5,"fecha":"2025-02-08","saldo":60003.0,"amort":0.0,"int":749.19,"desgrav":0.0,"cuota":749.19,"estado":"Pagado"},{"n":6,"fecha":"2025-03-08","saldo":60003.0,"amort":0.0,"int":676.28,"desgrav":0.0,"cuota":676.28,"estado":"Pagado"},{"n":7,"fecha":"2025-04-08","saldo":60003.0,"amort":2153.17,"int":749.19,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":8,"fecha":"2025-05-08","saldo":57849.83,"amort":2203.49,"int":698.87,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":9,"fecha":"2025-06-09","saldo":55646.34,"amort":2185.01,"int":717.35,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":10,"fecha":"2025-07-08","saldo":53461.33,"amort":2278.16,"int":624.2,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":11,"fecha":"2025-08-08","saldo":51183.17,"amort":2263.29,"int":639.07,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":12,"fecha":"2025-09-08","saldo":48919.87,"amort":2291.55,"int":610.81,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":13,"fecha":"2025-10-09","saldo":46628.32,"amort":2320.16,"int":582.2,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":14,"fecha":"2025-11-08","saldo":44308.16,"amort":2367.09,"int":535.28,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":15,"fecha":"2025-12-09","saldo":41941.07,"amort":2378.69,"int":523.67,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":16,"fecha":"2026-01-08","saldo":39562.38,"amort":2424.42,"int":477.94,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":17,"fecha":"2026-02-09","saldo":37137.96,"amort":2423.61,"int":478.76,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":18,"fecha":"2026-03-09","saldo":34714.35,"amort":2511.1,"int":391.26,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":19,"fecha":"2025-04-08","saldo":32203.25,"amort":2513.32,"int":389.04,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":20,"fecha":"2026-05-08","saldo":29689.93,"amort":2543.69,"int":358.68,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":21,"fecha":"2026-06-08","saldo":27146.24,"amort":2563.42,"int":338.95,"desgrav":0.0,"cuota":2902.36,"estado":"Pagado"},{"n":22,"fecha":"2026-07-08","saldo":24582.83,"amort":2605.38,"int":296.98,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":23,"fecha":"2026-08-08","saldo":21977.44,"amort":2627.95,"int":274.41,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":24,"fecha":"2026-09-08","saldo":19349.49,"amort":2660.77,"int":241.6,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":25,"fecha":"2026-10-09","saldo":16688.72,"amort":2693.99,"int":208.37,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":26,"fecha":"2026-11-09","saldo":13994.73,"amort":2727.63,"int":174.74,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":27,"fecha":"2026-12-09","saldo":11267.11,"amort":2766.25,"int":136.12,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":28,"fecha":"2027-01-08","saldo":8500.86,"amort":2799.67,"int":102.7,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":29,"fecha":"2027-02-08","saldo":5701.19,"amort":2831.18,"int":71.18,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"},{"n":30,"fecha":"2027-03-08","saldo":2870.02,"amort":2870.02,"int":32.35,"desgrav":0.0,"cuota":2902.36,"estado":"Pendiente"}]},{"id":2,"nombre":"Personal Stander – Cecilia Robles","entidad":"Stander","color":"#7c3aed","totalCredito":51250.37,"cuotaAmt":1067.7,"totalCuotas":48,"cuotasPagadas":13,"totalPagado":13880.1,"totalPendiente":37370.27,"cols":["N°","Capital","Interés","A Pagar","Fecha Vcto","Estado"],"tipo":"stander","cuotas":[{"n":1,"capital":337.51,"int":730.19,"cuota":1067.7,"fecha":"2025-06-06","estado":"Pagado"},{"n":2,"capital":428.31,"int":639.39,"cuota":1067.7,"fecha":"2025-07-07","estado":"Pagado"},{"n":3,"capital":436.62,"int":631.08,"cuota":1067.7,"fecha":"2025-08-07","estado":"Pagado"},{"n":4,"capital":465.37,"int":602.33,"cuota":1067.7,"fecha":"2025-09-06","estado":"Pagado"},{"n":5,"capital":474.1,"int":593.6,"cuota":1067.7,"fecha":"2025-10-06","estado":"Pagado"},{"n":6,"capital":463.32,"int":604.38,"cuota":1067.7,"fecha":"2025-11-06","estado":"Pagado"},{"n":7,"capital":491.69,"int":576.01,"cuota":1067.7,"fecha":"2025-12-06","estado":"Pagado"},{"n":8,"capital":481.85,"int":585.85,"cuota":1067.7,"fecha":"2026-01-06","estado":"Pagado"},{"n":9,"capital":491.2,"int":576.5,"cuota":1067.7,"fecha":"2026-02-06","estado":"Pagado"},{"n":10,"capital":556.07,"int":511.63,"cuota":1067.7,"fecha":"2026-03-06","estado":"Pagado"},{"n":11,"capital":511.51,"int":556.19,"cuota":1067.7,"fecha":"2026-04-06","estado":"Pagado"},{"n":12,"capital":539.22,"int":528.48,"cuota":1067.7,"fecha":"2026-05-06","estado":"Pagado"},{"n":13,"capital":531.9,"int":535.8,"cuota":1067.7,"fecha":"2026-06-06","estado":"Pagado"},{"n":14,"capital":559.33,"int":508.37,"cuota":1067.7,"fecha":"2026-07-06","estado":"Pendiente"},{"n":15,"capital":536.3,"int":531.4,"cuota":1067.7,"fecha":"2026-08-07","estado":"Pendiente"},{"n":16,"capital":563.48,"int":504.22,"cuota":1067.7,"fecha":"2026-09-07","estado":"Pendiente"},{"n":17,"capital":606.52,"int":461.18,"cuota":1067.7,"fecha":"2026-10-06","estado":"Pendiente"},{"n":18,"capital":586.17,"int":481.53,"cuota":1067.7,"fecha":"2026-11-06","estado":"Pendiente"},{"n":19,"capital":597.55,"int":470.15,"cuota":1067.7,"fecha":"2026-12-07","estado":"Pendiente"},{"n":20,"capital":624.07,"int":443.63,"cuota":1067.7,"fecha":"2027-01-06","estado":"Pendiente"},{"n":21,"capital":621.25,"int":446.45,"cuota":1067.7,"fecha":"2027-02-06","estado":"Pendiente"},{"n":22,"capital":675.7,"int":392.0,"cuota":1067.7,"fecha":"2027-03-06","estado":"Pendiente"},{"n":23,"capital":646.41,"int":421.29,"cuota":1067.7,"fecha":"2027-04-06","estado":"Pendiente"},{"n":24,"capital":672.26,"int":395.44,"cuota":1067.7,"fecha":"2027-05-06","estado":"Pendiente"},{"n":25,"capital":646.2,"int":421.5,"cuota":1067.7,"fecha":"2027-06-08","estado":"Pendiente"},{"n":26,"capital":721.93,"int":345.77,"cuota":1067.7,"fecha":"2027-07-06","estado":"Pendiente"},{"n":27,"capital":686.51,"int":381.19,"cuota":1067.7,"fecha":"2027-08-07","estado":"Pendiente"},{"n":28,"capital":723.44,"int":344.26,"cuota":1067.7,"fecha":"2027-09-06","estado":"Pendiente"},{"n":29,"capital":737.02,"int":330.68,"cuota":1067.7,"fecha":"2027-10-06","estado":"Pendiente"},{"n":30,"capital":740.19,"int":327.51,"cuota":1067.7,"fecha":"2027-11-06","estado":"Pendiente"},{"n":31,"capital":764.75,"int":302.95,"cuota":1067.7,"fecha":"2027-12-06","estado":"Pendiente"},{"n":32,"capital":769.39,"int":298.31,"cuota":1067.7,"fecha":"2028-01-06","estado":"Pendiente"},{"n":33,"capital":775.08,"int":292.62,"cuota":1067.7,"fecha":"2028-02-07","estado":"Pendiente"},{"n":34,"capital":825.55,"int":242.15,"cuota":1067.7,"fecha":"2028-03-06","estado":"Pendiente"},{"n":35,"capital":815.37,"int":252.33,"cuota":1067.7,"fecha":"2028-04-06","estado":"Pendiente"},{"n":36,"capital":838.89,"int":228.81,"cuota":1067.7,"fecha":"2028-05-06","estado":"Pendiente"},{"n":37,"capital":847.46,"int":220.24,"cuota":1067.7,"fecha":"2028-06-06","estado":"Pendiente"},{"n":38,"capital":870.54,"int":197.16,"cuota":1067.7,"fecha":"2028-07-06","estado":"Pendiente"},{"n":39,"capital":874.7,"int":193.0,"cuota":1067.7,"fecha":"2028-08-07","estado":"Pendiente"},{"n":40,"capital":903.29,"int":164.41,"cuota":1067.7,"fecha":"2028-09-06","estado":"Pendiente"},{"n":41,"capital":920.25,"int":147.45,"cuota":1067.7,"fecha":"2028-10-06","estado":"Pendiente"},{"n":42,"capital":933.14,"int":134.56,"cuota":1067.7,"fecha":"2028-11-06","estado":"Pendiente"},{"n":43,"capital":955.04,"int":112.66,"cuota":1067.7,"fecha":"2028-12-06","estado":"Pendiente"},{"n":44,"capital":969.77,"int":97.93,"cuota":1067.7,"fecha":"2029-01-06","estado":"Pendiente"},{"n":45,"capital":988.59,"int":79.11,"cuota":1067.7,"fecha":"2029-02-06","estado":"Pendiente"},{"n":46,"capital":1013.62,"int":54.08,"cuota":1067.7,"fecha":"2029-03-06","estado":"Pendiente"},{"n":47,"capital":1027.43,"int":40.27,"cuota":1067.7,"fecha":"2029-04-06","estado":"Pendiente"},{"n":48,"capital":1048.14,"int":20.33,"cuota":1068.47,"fecha":"2029-05-07","estado":"Pendiente"}]},{"id":3,"nombre":"Derrama Magisterial – Teodoro Carrillo","entidad":"Derrama Magisterial","color":"#0891b2","totalCredito":29100.24,"cuotaAmt":404.17,"totalCuotas":72,"cuotasPagadas":21,"totalPagado":8487.57,"totalPendiente":20612.67,"cols":["N°","Fecha Vcto","Capital","Interés","Fondo Desgrav.","Comisión","Cuota","Estado"],"tipo":"derrama","cuotas":[{"n":1,"fecha":"2024-08-31","capital":122.88,"int":264.37,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":2,"fecha":"2024-09-30","capital":124.81,"int":262.44,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":3,"fecha":"2024-10-31","capital":126.77,"int":260.48,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":4,"fecha":"2024-11-30","capital":128.76,"int":258.49,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":5,"fecha":"2024-12-31","capital":130.78,"int":256.47,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":6,"fecha":"2025-01-31","capital":132.83,"int":254.42,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":7,"fecha":"2025-02-28","capital":134.92,"int":252.33,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":8,"fecha":"2025-03-31","capital":137.04,"int":250.21,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":9,"fecha":"2025-04-30","capital":139.19,"int":248.06,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":10,"fecha":"2025-05-31","capital":141.37,"int":245.88,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":11,"fecha":"2025-06-30","capital":143.59,"int":243.66,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":12,"fecha":"2025-07-31","capital":145.85,"int":241.4,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":13,"fecha":"2025-08-31","capital":148.14,"int":239.11,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":14,"fecha":"2025-09-30","capital":150.46,"int":236.79,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":15,"fecha":"2025-10-31","capital":152.83,"int":234.42,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":16,"fecha":"2025-11-30","capital":155.23,"int":232.02,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":17,"fecha":"2025-12-31","capital":157.66,"int":229.59,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":18,"fecha":"2026-01-31","capital":160.14,"int":227.11,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":19,"fecha":"2026-02-28","capital":162.65,"int":224.6,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":20,"fecha":"2026-03-31","capital":165.21,"int":222.04,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":21,"fecha":"2026-04-30","capital":167.8,"int":219.45,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pagado"},{"n":22,"fecha":"2026-05-31","capital":170.43,"int":216.82,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":23,"fecha":"2026-06-30","capital":173.11,"int":214.14,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":24,"fecha":"2026-07-31","capital":175.83,"int":211.42,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":25,"fecha":"2026-08-31","capital":178.59,"int":208.66,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":26,"fecha":"2026-09-30","capital":181.39,"int":205.86,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":27,"fecha":"2026-10-31","capital":184.24,"int":203.01,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":28,"fecha":"2026-11-30","capital":187.13,"int":200.12,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":29,"fecha":"2026-12-31","capital":190.07,"int":197.18,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":30,"fecha":"2027-01-31","capital":193.05,"int":194.2,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":31,"fecha":"2027-02-28","capital":196.09,"int":191.16,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":32,"fecha":"2027-03-31","capital":199.16,"int":188.09,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":33,"fecha":"2027-04-30","capital":202.29,"int":184.96,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":34,"fecha":"2027-05-31","capital":205.47,"int":181.78,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":35,"fecha":"2027-06-30","capital":208.69,"int":178.56,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":36,"fecha":"2027-07-31","capital":211.97,"int":175.28,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":37,"fecha":"2027-08-31","capital":215.3,"int":171.95,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":38,"fecha":"2027-09-30","capital":218.68,"int":168.57,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":39,"fecha":"2027-10-31","capital":222.11,"int":165.14,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":40,"fecha":"2027-11-30","capital":225.6,"int":161.65,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":41,"fecha":"2027-12-31","capital":229.14,"int":158.11,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":42,"fecha":"2028-01-31","capital":232.74,"int":154.51,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":43,"fecha":"2028-02-29","capital":236.39,"int":150.86,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":44,"fecha":"2028-03-31","capital":240.1,"int":147.15,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":45,"fecha":"2028-04-30","capital":243.87,"int":143.38,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":46,"fecha":"2028-05-31","capital":247.7,"int":139.55,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":47,"fecha":"2028-06-30","capital":251.59,"int":135.66,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":48,"fecha":"2028-07-31","capital":255.54,"int":131.71,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":49,"fecha":"2028-08-31","capital":259.55,"int":127.7,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":50,"fecha":"2028-09-30","capital":263.63,"int":123.62,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":51,"fecha":"2028-10-31","capital":267.77,"int":119.48,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":52,"fecha":"2028-11-30","capital":271.97,"int":115.28,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":53,"fecha":"2028-12-31","capital":276.24,"int":111.01,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":54,"fecha":"2029-01-31","capital":280.58,"int":106.67,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":55,"fecha":"2029-02-28","capital":284.98,"int":102.27,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":56,"fecha":"2029-03-31","capital":289.46,"int":97.79,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":57,"fecha":"2029-04-30","capital":294.0,"int":93.25,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":58,"fecha":"2029-05-31","capital":298.62,"int":88.63,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":59,"fecha":"2029-06-30","capital":303.3,"int":83.95,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":60,"fecha":"2029-07-31","capital":308.07,"int":79.18,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":61,"fecha":"2029-08-31","capital":312.9,"int":74.35,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":62,"fecha":"2029-09-30","capital":317.82,"int":69.43,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":63,"fecha":"2029-10-31","capital":322.8,"int":64.45,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":64,"fecha":"2029-11-30","capital":327.87,"int":59.38,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":65,"fecha":"2029-12-31","capital":333.02,"int":54.23,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":66,"fecha":"2030-01-31","capital":338.25,"int":49.0,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":67,"fecha":"2030-02-28","capital":343.56,"int":43.69,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":68,"fecha":"2030-03-31","capital":348.95,"int":38.3,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":69,"fecha":"2030-04-30","capital":354.43,"int":32.82,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":70,"fecha":"2030-05-31","capital":360.0,"int":27.25,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":71,"fecha":"2030-06-30","capital":365.65,"int":21.6,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"},{"n":72,"fecha":"2030-07-31","capital":371.4,"int":15.85,"desgrav":2.11,"comision":14.81,"cuota":404.17,"estado":"Pendiente"}]},{"id":4,"nombre":"Personal Efectiva 1 – Jhonny","entidad":"Efectiva","color":"#f59e0b","totalCredito":5131.68,"cuotaAmt":213.82,"totalCuotas":24,"cuotasPagadas":4,"totalPagado":855.28,"totalPendiente":4276.4,"cols":["N°","Cuota","A Pagar","Fecha Vcto","Estado"],"tipo":"simple","cuotas":[{"n":1,"cuota":213.82,"fecha":"2026-02-07","apagar":213.82,"estado":"Pagado"},{"n":2,"cuota":213.82,"fecha":"2026-03-07","apagar":213.82,"estado":"Pagado"},{"n":3,"cuota":213.82,"fecha":"2026-04-07","apagar":213.82,"estado":"Pagado"},{"n":4,"cuota":213.82,"fecha":"2026-05-07","apagar":213.82,"estado":"Pagado"},{"n":5,"cuota":213.82,"fecha":"2026-06-07","apagar":213.82,"estado":"Pendiente"},{"n":6,"cuota":213.82,"fecha":"2026-07-07","apagar":213.82,"estado":"Pendiente"},{"n":7,"cuota":213.82,"fecha":"2026-08-07","apagar":213.82,"estado":"Pendiente"},{"n":8,"cuota":213.82,"fecha":"2026-09-07","apagar":213.82,"estado":"Pendiente"},{"n":9,"cuota":213.82,"fecha":"2026-10-07","apagar":213.82,"estado":"Pendiente"},{"n":10,"cuota":213.82,"fecha":"2026-11-07","apagar":213.82,"estado":"Pendiente"},{"n":11,"cuota":213.82,"fecha":"2026-12-07","apagar":213.82,"estado":"Pendiente"},{"n":12,"cuota":213.82,"fecha":"2027-01-07","apagar":213.82,"estado":"Pendiente"},{"n":13,"cuota":213.82,"fecha":"2027-02-07","apagar":213.82,"estado":"Pendiente"},{"n":14,"cuota":213.82,"fecha":"2027-03-07","apagar":213.82,"estado":"Pendiente"},{"n":15,"cuota":213.82,"fecha":"2027-04-07","apagar":213.82,"estado":"Pendiente"},{"n":16,"cuota":213.82,"fecha":"2027-05-07","apagar":213.82,"estado":"Pendiente"},{"n":17,"cuota":213.82,"fecha":"2027-06-07","apagar":213.82,"estado":"Pendiente"},{"n":18,"cuota":213.82,"fecha":"2027-07-07","apagar":213.82,"estado":"Pendiente"},{"n":19,"cuota":213.82,"fecha":"2027-08-07","apagar":213.82,"estado":"Pendiente"},{"n":20,"cuota":213.82,"fecha":"2027-09-07","apagar":213.82,"estado":"Pendiente"},{"n":21,"cuota":213.82,"fecha":"2027-10-07","apagar":213.82,"estado":"Pendiente"},{"n":22,"cuota":213.82,"fecha":"2027-11-07","apagar":213.82,"estado":"Pendiente"},{"n":23,"cuota":213.82,"fecha":"2027-12-07","apagar":213.82,"estado":"Pendiente"},{"n":24,"cuota":213.82,"fecha":"2028-01-07","apagar":213.82,"estado":"Pendiente"}]},{"id":5,"nombre":"Personal Efectiva 2 – Jhonny","entidad":"Efectiva","color":"#f59e0b","totalCredito":7162.56,"cuotaAmt":198.96,"totalCuotas":36,"cuotasPagadas":9,"totalPagado":1790.64,"totalPendiente":5371.92,"cols":["N°","Cuota","A Pagar","Fecha Vcto","Estado"],"tipo":"simple","cuotas":[{"n":1,"cuota":198.96,"fecha":"2025-09-07","apagar":198.96,"estado":"Pagado"},{"n":2,"cuota":198.96,"fecha":"2025-10-07","apagar":198.96,"estado":"Pagado"},{"n":3,"cuota":198.96,"fecha":"2025-11-07","apagar":198.96,"estado":"Pagado"},{"n":4,"cuota":198.96,"fecha":"2025-12-07","apagar":198.96,"estado":"Pagado"},{"n":5,"cuota":198.96,"fecha":"2026-01-07","apagar":198.96,"estado":"Pagado"},{"n":6,"cuota":198.96,"fecha":"2026-02-07","apagar":198.96,"estado":"Pagado"},{"n":7,"cuota":198.96,"fecha":"2026-03-07","apagar":198.96,"estado":"Pagado"},{"n":8,"cuota":198.96,"fecha":"2026-04-07","apagar":198.96,"estado":"Pagado"},{"n":9,"cuota":198.96,"fecha":"2026-05-07","apagar":198.96,"estado":"Pagado"},{"n":10,"cuota":198.96,"fecha":"2026-06-07","apagar":198.96,"estado":"Pendiente"},{"n":11,"cuota":198.96,"fecha":"2026-07-07","apagar":198.96,"estado":"Pendiente"},{"n":12,"cuota":198.96,"fecha":"2026-08-07","apagar":198.96,"estado":"Pendiente"},{"n":13,"cuota":198.96,"fecha":"2026-09-07","apagar":198.96,"estado":"Pendiente"},{"n":14,"cuota":198.96,"fecha":"2026-10-07","apagar":198.96,"estado":"Pendiente"},{"n":15,"cuota":198.96,"fecha":"2026-11-07","apagar":198.96,"estado":"Pendiente"},{"n":16,"cuota":198.96,"fecha":"2026-12-07","apagar":198.96,"estado":"Pendiente"},{"n":17,"cuota":198.96,"fecha":"2027-01-07","apagar":198.96,"estado":"Pendiente"},{"n":18,"cuota":198.96,"fecha":"2027-02-07","apagar":198.96,"estado":"Pendiente"},{"n":19,"cuota":198.96,"fecha":"2027-03-07","apagar":198.96,"estado":"Pendiente"},{"n":20,"cuota":198.96,"fecha":"2027-04-07","apagar":198.96,"estado":"Pendiente"},{"n":21,"cuota":198.96,"fecha":"2027-05-07","apagar":198.96,"estado":"Pendiente"},{"n":22,"cuota":198.96,"fecha":"2027-06-07","apagar":198.96,"estado":"Pendiente"},{"n":23,"cuota":198.96,"fecha":"2027-07-07","apagar":198.96,"estado":"Pendiente"},{"n":24,"cuota":198.96,"fecha":"2027-08-07","apagar":198.96,"estado":"Pendiente"},{"n":25,"cuota":198.96,"fecha":"2027-09-07","apagar":198.96,"estado":"Pendiente"},{"n":26,"cuota":198.96,"fecha":"2027-10-07","apagar":198.96,"estado":"Pendiente"},{"n":27,"cuota":198.96,"fecha":"2027-11-07","apagar":198.96,"estado":"Pendiente"},{"n":28,"cuota":198.96,"fecha":"2027-12-07","apagar":198.96,"estado":"Pendiente"},{"n":29,"cuota":198.96,"fecha":"2028-01-07","apagar":198.96,"estado":"Pendiente"},{"n":30,"cuota":198.96,"fecha":"2028-02-07","apagar":198.96,"estado":"Pendiente"},{"n":31,"cuota":198.96,"fecha":"2028-03-07","apagar":198.96,"estado":"Pendiente"},{"n":32,"cuota":198.96,"fecha":"2028-04-07","apagar":198.96,"estado":"Pendiente"},{"n":33,"cuota":198.96,"fecha":"2028-05-07","apagar":198.96,"estado":"Pendiente"},{"n":34,"cuota":198.96,"fecha":"2028-06-07","apagar":198.96,"estado":"Pendiente"},{"n":35,"cuota":198.96,"fecha":"2028-07-07","apagar":198.96,"estado":"Pendiente"},{"n":36,"cuota":198.96,"fecha":"2028-08-07","apagar":198.96,"estado":"Pendiente"}]},{"id":6,"nombre":"Personal Efectiva 3 – Jhonny","entidad":"Efectiva","color":"#f59e0b","totalCredito":10601.03,"cuotaAmt":623.59,"totalCuotas":17,"cuotasPagadas":12,"totalPagado":7483.08,"totalPendiente":3117.95,"cols":["N°","Cuota","A Pagar","Fecha Vcto","Estado"],"tipo":"simple","cuotas":[{"n":1,"cuota":623.59,"fecha":"2025-06-07","apagar":623.59,"estado":"Pagado"},{"n":2,"cuota":623.59,"fecha":"2025-07-07","apagar":623.59,"estado":"Pagado"},{"n":3,"cuota":623.59,"fecha":"2025-08-07","apagar":623.59,"estado":"Pagado"},{"n":4,"cuota":623.59,"fecha":"2025-09-07","apagar":623.59,"estado":"Pagado"},{"n":5,"cuota":623.59,"fecha":"2025-10-07","apagar":623.59,"estado":"Pagado"},{"n":6,"cuota":623.59,"fecha":"2025-11-07","apagar":623.59,"estado":"Pagado"},{"n":7,"cuota":623.59,"fecha":"2025-12-07","apagar":623.59,"estado":"Pagado"},{"n":8,"cuota":623.59,"fecha":"2026-01-07","apagar":623.59,"estado":"Pagado"},{"n":9,"cuota":623.59,"fecha":"2026-02-07","apagar":623.59,"estado":"Pagado"},{"n":10,"cuota":623.59,"fecha":"2026-03-07","apagar":623.59,"estado":"Pagado"},{"n":11,"cuota":623.59,"fecha":"2026-04-07","apagar":623.59,"estado":"Pagado"},{"n":12,"cuota":623.59,"fecha":"2026-05-07","apagar":623.59,"estado":"Pagado"},{"n":13,"cuota":623.59,"fecha":"2026-06-07","apagar":623.59,"estado":"Pendiente"},{"n":14,"cuota":623.59,"fecha":"2026-07-07","apagar":623.59,"estado":"Pendiente"},{"n":15,"cuota":623.59,"fecha":"2026-08-07","apagar":623.59,"estado":"Pendiente"},{"n":16,"cuota":623.59,"fecha":"2026-09-07","apagar":623.59,"estado":"Pendiente"},{"n":17,"cuota":623.59,"fecha":"2026-10-07","apagar":623.59,"estado":"Pendiente"}]},{"id":7,"nombre":"Personal Interbank – Teodoro Carrillo","entidad":"Interbank","color":"#0033a0","totalCredito":27765.67,"cuotaAmt":462.76,"totalCuotas":60,"cuotasPagadas":24,"totalPagado":11106.24,"totalPendiente":16659.43,"cols":["N°","Amortización","Interés","Seguro","Total Cuota","Fecha Vcto","Estado"],"tipo":"interbank_per","cuotas":[{"n":1,"amort":418.35,"int":40.68,"seguro":3.73,"cuota":462.76,"fecha":"2024-07-02","estado":"Pagado"},{"n":2,"amort":192.19,"int":247.97,"seguro":22.6,"cuota":462.76,"fecha":"2024-08-02","estado":"Pagado"},{"n":3,"amort":195.04,"int":245.36,"seguro":22.36,"cuota":462.76,"fecha":"2024-09-02","estado":"Pagado"},{"n":4,"amort":206.53,"int":234.82,"seguro":21.41,"cuota":462.76,"fecha":"2024-10-02","estado":"Pagado"},{"n":5,"amort":201.0,"int":239.89,"seguro":21.87,"cuota":462.76,"fecha":"2024-11-02","estado":"Pagado"},{"n":6,"amort":212.38,"int":229.46,"seguro":20.92,"cuota":462.76,"fecha":"2024-12-02","estado":"Pagado"},{"n":7,"amort":207.14,"int":234.27,"seguro":21.35,"cuota":462.76,"fecha":"2025-01-02","estado":"Pagado"},{"n":8,"amort":210.21,"int":231.45,"seguro":21.1,"cuota":462.76,"fecha":"2025-02-02","estado":"Pagado"},{"n":9,"amort":237.6,"int":206.34,"seguro":18.82,"cuota":462.76,"fecha":"2025-03-02","estado":"Pagado"},{"n":10,"amort":216.86,"int":225.36,"seguro":20.54,"cuota":462.76,"fecha":"2025-04-02","estado":"Pagado"},{"n":11,"amort":227.95,"int":215.19,"seguro":19.62,"cuota":462.76,"fecha":"2025-05-02","estado":"Pagado"},{"n":12,"amort":223.46,"int":219.31,"seguro":19.99,"cuota":462.76,"fecha":"2025-06-02","estado":"Pagado"},{"n":13,"amort":234.43,"int":209.25,"seguro":19.08,"cuota":462.76,"fecha":"2025-07-02","estado":"Pagado"},{"n":14,"amort":230.26,"int":213.08,"seguro":19.42,"cuota":462.76,"fecha":"2025-08-02","estado":"Pagado"},{"n":15,"amort":233.67,"int":209.95,"seguro":19.14,"cuota":462.76,"fecha":"2025-09-02","estado":"Pagado"},{"n":16,"amort":244.47,"int":200.05,"seguro":18.24,"cuota":462.76,"fecha":"2025-10-02","estado":"Pagado"},{"n":17,"amort":240.78,"int":203.44,"seguro":18.54,"cuota":462.76,"fecha":"2025-11-02","estado":"Pagado"},{"n":18,"amort":251.43,"int":193.67,"seguro":17.66,"cuota":462.76,"fecha":"2025-12-02","estado":"Pagado"},{"n":19,"amort":248.08,"int":196.75,"seguro":17.93,"cuota":462.76,"fecha":"2026-01-02","estado":"Pagado"},{"n":20,"amort":251.76,"int":193.37,"seguro":17.63,"cuota":462.76,"fecha":"2026-02-02","estado":"Pagado"},{"n":21,"amort":275.67,"int":171.45,"seguro":15.64,"cuota":462.76,"fecha":"2026-03-02","estado":"Pagado"},{"n":22,"amort":259.59,"int":186.2,"seguro":16.97,"cuota":462.76,"fecha":"2026-04-02","estado":"Pagado"},{"n":23,"amort":269.92,"int":176.73,"seguro":16.11,"cuota":462.76,"fecha":"2026-05-02","estado":"Pagado"},{"n":24,"amort":267.46,"int":178.99,"seguro":16.31,"cuota":462.76,"fecha":"2026-06-02","estado":"Pagado"},{"n":25,"amort":277.63,"int":169.66,"seguro":15.47,"cuota":462.76,"fecha":"2026-07-02","estado":"Pendiente"},{"n":26,"amort":275.54,"int":171.58,"seguro":15.64,"cuota":462.76,"fecha":"2026-08-02","estado":"Pendiente"},{"n":27,"amort":279.63,"int":167.83,"seguro":15.3,"cuota":462.76,"fecha":"2026-09-02","estado":"Pendiente"},{"n":28,"amort":289.59,"int":158.7,"seguro":14.47,"cuota":462.76,"fecha":"2026-10-02","estado":"Pendiente"},{"n":29,"amort":288.09,"int":160.08,"seguro":14.59,"cuota":462.76,"fecha":"2026-11-02","estado":"Pendiente"},{"n":30,"amort":297.89,"int":151.09,"seguro":13.78,"cuota":462.76,"fecha":"2026-12-02","estado":"Pendiente"},{"n":31,"amort":296.79,"int":152.11,"seguro":13.86,"cuota":462.76,"fecha":"2027-01-02","estado":"Pendiente"},{"n":32,"amort":301.18,"int":148.08,"seguro":13.5,"cuota":462.76,"fecha":"2027-02-02","estado":"Pendiente"},{"n":33,"amort":320.95,"int":129.96,"seguro":11.85,"cuota":462.76,"fecha":"2027-03-02","estado":"Pendiente"},{"n":34,"amort":310.42,"int":139.61,"seguro":12.73,"cuota":462.76,"fecha":"2027-04-02","estado":"Pendiente"},{"n":35,"amort":319.83,"int":130.99,"seguro":11.94,"cuota":462.76,"fecha":"2027-05-02","estado":"Pendiente"},{"n":36,"amort":319.78,"int":131.04,"seguro":11.94,"cuota":462.76,"fecha":"2027-06-02","estado":"Pendiente"},{"n":37,"amort":329.02,"int":122.57,"seguro":11.17,"cuota":462.76,"fecha":"2027-07-02","estado":"Pendiente"},{"n":38,"amort":329.41,"int":122.21,"seguro":11.14,"cuota":462.76,"fecha":"2027-08-02","estado":"Pendiente"},{"n":39,"amort":334.3,"int":117.73,"seguro":10.73,"cuota":462.76,"fecha":"2027-09-02","estado":"Pendiente"},{"n":40,"amort":343.27,"int":109.51,"seguro":9.98,"cuota":462.76,"fecha":"2027-10-02","estado":"Pendiente"},{"n":41,"amort":344.36,"int":108.51,"seguro":9.89,"cuota":462.76,"fecha":"2027-11-02","estado":"Pendiente"},{"n":42,"amort":353.14,"int":100.46,"seguro":9.16,"cuota":462.76,"fecha":"2027-12-02","estado":"Pendiente"},{"n":43,"amort":354.71,"int":99.02,"seguro":9.03,"cuota":462.76,"fecha":"2028-01-02","estado":"Pendiente"},{"n":44,"amort":359.97,"int":94.2,"seguro":8.59,"cuota":462.76,"fecha":"2028-02-02","estado":"Pendiente"},{"n":45,"amort":371.65,"int":83.5,"seguro":7.61,"cuota":462.76,"fecha":"2028-03-02","estado":"Pendiente"},{"n":46,"amort":370.83,"int":84.25,"seguro":7.68,"cuota":462.76,"fecha":"2028-04-02","estado":"Pendiente"},{"n":47,"amort":379.14,"int":76.63,"seguro":6.99,"cuota":462.76,"fecha":"2028-05-02","estado":"Pendiente"},{"n":48,"amort":381.97,"int":74.04,"seguro":6.75,"cuota":462.76,"fecha":"2028-06-02","estado":"Pendiente"},{"n":49,"amort":390.08,"int":66.61,"seguro":6.07,"cuota":462.76,"fecha":"2028-07-02","estado":"Pendiente"},{"n":50,"amort":393.43,"int":63.54,"seguro":5.79,"cuota":462.76,"fecha":"2028-08-02","estado":"Pendiente"},{"n":51,"amort":399.27,"int":58.19,"seguro":5.3,"cuota":462.76,"fecha":"2028-09-02","estado":"Pendiente"},{"n":52,"amort":407.07,"int":51.04,"seguro":4.65,"cuota":462.76,"fecha":"2028-10-02","estado":"Pendiente"},{"n":53,"amort":411.24,"int":47.22,"seguro":4.3,"cuota":462.76,"fecha":"2028-11-02","estado":"Pendiente"},{"n":54,"amort":418.82,"int":40.27,"seguro":3.67,"cuota":462.76,"fecha":"2028-12-02","estado":"Pendiente"},{"n":55,"amort":423.56,"int":35.93,"seguro":3.27,"cuota":462.76,"fecha":"2029-01-02","estado":"Pendiente"},{"n":56,"amort":429.85,"int":30.16,"seguro":2.75,"cuota":462.76,"fecha":"2029-02-02","estado":"Pendiente"},{"n":57,"amort":438.81,"int":21.95,"seguro":2.0,"cuota":462.76,"fecha":"2029-03-02","estado":"Pendiente"},{"n":58,"amort":442.74,"int":18.35,"seguro":1.67,"cuota":462.76,"fecha":"2029-04-02","estado":"Pendiente"},{"n":59,"amort":449.75,"int":11.92,"seguro":1.09,"cuota":462.76,"fecha":"2029-05-02","estado":"Pendiente"},{"n":60,"amort":456.06,"int":6.2,"seguro":0.57,"cuota":462.83,"fecha":"2029-06-02","estado":"Pendiente"}]},{"id":8,"nombre":"Personal Ripley – Susan Tarrillo","entidad":"Ripley","color":"#dc2626","totalCredito":10584.0,"cuotaAmt":1764.0,"totalCuotas":6,"cuotasPagadas":4,"totalPagado":7056.0,"totalPendiente":3528.0,"cols":["N°","Cuota","A Pagar","Fecha Vcto","Estado"],"tipo":"simple","cuotas":[{"n":1,"cuota":1764.0,"fecha":"2026-03-02","apagar":1764.0,"estado":"Pagado"},{"n":2,"cuota":1764.0,"fecha":"2026-04-02","apagar":1764.0,"estado":"Pagado"},{"n":3,"cuota":1764.0,"fecha":"2026-05-02","apagar":1764.0,"estado":"Pagado"},{"n":4,"cuota":1764.0,"fecha":"2026-06-02","apagar":1764.0,"estado":"Pagado"},{"n":5,"cuota":1764.0,"fecha":"2026-07-02","apagar":1764.0,"estado":"Pendiente"},{"n":6,"cuota":1764.0,"fecha":"2026-08-02","apagar":1764.0,"estado":"Pendiente"}]},{"id":9,"nombre":"Personal Mi Banco – Jhonny Carrillo","entidad":"Mi Banco","color":"#16a34a","totalCredito":12987.0,"cuotaAmt":721.5,"totalCuotas":18,"cuotasPagadas":14,"totalPagado":10101.0,"totalPendiente":2886.0,"cols":["N°","Cuota","A Pagar","Fecha Vcto","Estado"],"tipo":"simple","cuotas":[{"n":1,"cuota":721.5,"fecha":"2025-04-02","apagar":721.5,"estado":"Pagado"},{"n":2,"cuota":721.5,"fecha":"2025-05-02","apagar":721.5,"estado":"Pagado"},{"n":3,"cuota":721.5,"fecha":"2025-06-02","apagar":721.5,"estado":"Pagado"},{"n":4,"cuota":721.5,"fecha":"2025-07-02","apagar":721.5,"estado":"Pagado"},{"n":5,"cuota":721.5,"fecha":"2025-08-02","apagar":721.5,"estado":"Pagado"},{"n":6,"cuota":721.5,"fecha":"2025-09-02","apagar":721.5,"estado":"Pagado"},{"n":7,"cuota":721.5,"fecha":"2025-10-02","apagar":721.5,"estado":"Pagado"},{"n":8,"cuota":721.5,"fecha":"2025-11-02","apagar":721.5,"estado":"Pagado"},{"n":9,"cuota":721.5,"fecha":"2025-12-02","apagar":721.5,"estado":"Pagado"},{"n":10,"cuota":721.5,"fecha":"2026-01-02","apagar":721.5,"estado":"Pagado"},{"n":11,"cuota":721.5,"fecha":"2026-02-02","apagar":721.5,"estado":"Pagado"},{"n":12,"cuota":721.5,"fecha":"2026-03-02","apagar":721.5,"estado":"Pagado"},{"n":13,"cuota":721.5,"fecha":"2026-04-02","apagar":721.5,"estado":"Pagado"},{"n":14,"cuota":721.5,"fecha":"2026-05-02","apagar":721.5,"estado":"Pagado"},{"n":15,"cuota":721.5,"fecha":"2026-06-02","apagar":721.5,"estado":"Pendiente"},{"n":16,"cuota":721.5,"fecha":"2026-07-02","apagar":721.5,"estado":"Pendiente"},{"n":17,"cuota":721.5,"fecha":"2026-08-02","apagar":721.5,"estado":"Pendiente"},{"n":18,"cuota":721.5,"fecha":"2026-09-02","apagar":721.5,"estado":"Pendiente"}]},{"id":10,"nombre":"Empresarial Mi Banco","entidad":"Mi Banco","color":"#16a34a","totalCredito":94126.12,"cuotaAmt":2614.6,"totalCuotas":36,"cuotasPagadas":0,"totalPagado":0,"totalPendiente":94126.12,"cols":["N°","Fecha Vcto","Cuota Base","Interés","Comisiones","Total Cuota","Estado"],"tipo":"mibanco_emp","cuotas":[{"n":1,"fecha":"2026-06-19","cuota_base":1476.12,"int":1138.48,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":2,"fecha":"2026-07-20","cuota_base":1499.62,"int":1114.98,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":3,"fecha":"2026-08-19","cuota_base":1558.96,"int":1055.64,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":4,"fecha":"2026-09-21","cuota_base":1478.93,"int":1135.67,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":5,"fecha":"2026-10-19","cuota_base":1673.48,"int":941.12,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":6,"fecha":"2026-11-19","cuota_base":1598.48,"int":1016.12,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":7,"fecha":"2026-12-21","cuota_base":1591.71,"int":1022.89,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":8,"fecha":"2027-01-19","cuota_base":1712.0,"int":902.6,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":9,"fecha":"2027-02-19","cuota_base":1676.51,"int":938.09,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":10,"fecha":"2027-03-19","cuota_base":1792.03,"int":822.57,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":11,"fecha":"2027-04-19","cuota_base":1731.72,"int":882.88,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":12,"fecha":"2027-05-19","cuota_base":1787.09,"int":827.51,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":13,"fecha":"2027-06-21","cuota_base":1733.94,"int":880.66,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":14,"fecha":"2027-07-19","cuota_base":1893.24,"int":721.36,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":15,"fecha":"2027-08-19","cuota_base":1845.47,"int":769.13,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":16,"fecha":"2027-09-20","cuota_base":1850.79,"int":763.81,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":17,"fecha":"2027-10-19","cuota_base":1950.47,"int":664.13,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":18,"fecha":"2027-11-19","cuota_base":1935.35,"int":679.25,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":19,"fecha":"2027-12-20","cuota_base":1966.16,"int":648.44,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":20,"fecha":"2028-01-19","cuota_base":2017.51,"int":597.09,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":21,"fecha":"2028-02-21","cuota_base":1991.5,"int":623.1,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":22,"fecha":"2028-03-20","cuota_base":2115.2,"int":499.4,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":23,"fecha":"2028-04-19","cuota_base":2111.83,"int":502.77,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":24,"fecha":"2028-05-19","cuota_base":2144.35,"int":470.25,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":25,"fecha":"2028-06-19","cuota_base":2162.68,"int":451.92,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":26,"fecha":"2028-07-19","cuota_base":2210.68,"int":403.92,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":27,"fecha":"2028-08-21","cuota_base":2207.42,"int":407.18,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":28,"fecha":"2028-09-19","cuota_base":2289.99,"int":324.61,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":29,"fecha":"2028-10-19","cuota_base":2313.98,"int":300.62,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":30,"fecha":"2028-11-20","cuota_base":2331.81,"int":282.79,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":31,"fecha":"2028-12-19","cuota_base":2393.22,"int":221.38,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":32,"fecha":"2029-01-19","cuota_base":2415.92,"int":198.68,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":33,"fecha":"2029-02-19","cuota_base":2454.38,"int":160.22,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":34,"fecha":"2029-03-19","cuota_base":2505.25,"int":109.35,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":35,"fecha":"2029-04-19","cuota_base":2533.32,"int":81.28,"comision":2614.6,"cuota":2614.6,"estado":"Pendiente"},{"n":36,"fecha":"2029-05-21","cuota_base":2572.84,"int":42.28,"comision":2615.12,"cuota":2615.12,"estado":"Pendiente"}]}];
+
+// Deep clone so we can mutate estados
+let PRESTAMOS = JSON.parse(JSON.stringify(PRESTAMOS_BASE));
+
+// Load saved estados from localStorage
+function loadEstados(){
+    try {
+        var saved = JSON.parse(localStorage.getItem('carze_finanzas_estados')||'{}');
+        PRESTAMOS.forEach(function(p){
+            if(saved[p.id]){
+                p.cuotas.forEach(function(c){
+                    if(saved[p.id][c.n] !== undefined){
+                        c.estado = saved[p.id][c.n];
+                    }
+                });
+                recalcPrestamo(p);
+            }
+        });
+    } catch(e){}
+}
+
+function saveEstados(){
+    var data = {};
+    PRESTAMOS.forEach(function(p){
+        data[p.id] = {};
+        p.cuotas.forEach(function(c){ data[p.id][c.n] = c.estado; });
+    });
+    localStorage.setItem('carze_finanzas_estados', JSON.stringify(data));
+}
+
+function recalcPrestamo(p){
+    p.cuotasPagadas = p.cuotas.filter(function(c){return c.estado==='Pagado';}).length;
+    p.totalPagado   = Math.round(p.cuotas.filter(function(c){return c.estado==='Pagado';}).reduce(function(s,c){return s+(c.cuota||c.apagar||0);},0)*100)/100;
+    p.totalPendiente= Math.round(p.cuotas.filter(function(c){return c.estado!=='Pagado';}).reduce(function(s,c){return s+(c.cuota||c.apagar||0);},0)*100)/100;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function fmt(n){return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtF(v){if(!v||v===''||v==='None')return '—';var p=String(v).split('-');if(p.length===3)return p[2]+'/'+p[1]+'/'+p[0];return v;}
+function toast(msg,tipo){var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(tipo||'ok');t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+
+window.addEventListener('carze_auth_ready',function(){
+    var n=sessionStorage.getItem('carze_nombre')||'Usuario';
+    document.getElementById('userName').textContent=n;
+    document.getElementById('avatarInitials').textContent=n.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase()||'U';
+    loadEstados();
+    renderKPIs();
+    renderResumen();
+});
+
+function renderKPIs(){
+    var totC=0,totPag=0,totPend=0,totCuota=0;
+    PRESTAMOS.forEach(function(p){totC+=p.totalCredito;totPag+=p.totalPagado;totPend+=p.totalPendiente;totCuota+=p.cuotaAmt;});
+    var pct=totC>0?Math.round(totPag/totC*100):0;
+    document.getElementById('kTotal').textContent='S/ '+fmt(totC);
+    document.getElementById('kTotalSub').textContent=PRESTAMOS.length+' préstamos activos';
+    document.getElementById('kPend').textContent='S/ '+fmt(totPend);
+    document.getElementById('kPag').textContent='S/ '+fmt(totPag);
+    document.getElementById('kPagPct').textContent=pct+'% del total cancelado';
+    document.getElementById('kCuota').textContent='S/ '+fmt(totCuota);
+}
+
+function renderResumen(){
+    var grid=document.getElementById('resumenGrid');
+    grid.innerHTML='';
+    PRESTAMOS.forEach(function(p,i){
+        var pct=p.totalCredito>0?Math.round(p.totalPagado/p.totalCredito*100):0;
+        var rest=p.totalCuotas-p.cuotasPagadas;
+        var div=document.createElement('div');
+        div.className='loan-card';
+        div.style.animationDelay=(i*0.06)+'s';
+        div.innerHTML=
+          '<div class="loan-top">'+
+            '<div class="loan-top-row">'+
+              '<div class="loan-nombre" onclick="editarNombre('+p.id+',this)" title="Click para editar">'+p.nombre+' ✏️</div>'+
+              '<span class="loan-badge '+(rest>0?'badge-activo':'badge-pagado')+'">'+(rest>0?'Activo':'Completado')+'</span>'+
+            '</div>'+
+            '<div class="loan-meta">'+p.entidad+' · '+p.totalCuotas+' cuotas · <strong>S/ '+fmt(p.cuotaAmt)+'</strong> c/u</div>'+
+            '<div class="prog-label"><span>Progreso</span><span style="color:'+p.color+';font-weight:800">'+pct+'%</span></div>'+
+            '<div class="prog-bg"><div class="prog-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+          '</div>'+
+          '<div class="loan-stats">'+
+            '<div class="loan-stat"><div class="stat-label">Pagado</div><div class="stat-val v-pag">S/ '+fmt(p.totalPagado)+'</div></div>'+
+            '<div class="loan-stat"><div class="stat-label">Pendiente</div><div class="stat-val v-pend">S/ '+fmt(p.totalPendiente)+'</div></div>'+
+            '<div class="loan-stat"><div class="stat-label">Cuotas</div><div class="stat-val v-cuot">'+p.cuotasPagadas+'/'+p.totalCuotas+'</div></div>'+
+          '</div>'+
+          '<div class="loan-foot">'+
+            '<span style="font-size:.7rem;color:var(--muted)">Cuota mensual</span>'+
+            '<div style="display:flex;align-items:center;gap:8px">'+
+              '<span class="cuota-badge">S/ '+fmt(p.cuotaAmt)+'</span>'+
+              '<button class="ver-btn" onclick="abrirCronograma('+p.id+')">Ver Cronograma ›</button>'+
+            '</div>'+
+          '</div>';
+        grid.appendChild(div);
+    });
+}
+
+// ── EDITAR NOMBRE ─────────────────────────────────────────────
+function editarNombre(id,el){
+    var p=PRESTAMOS.find(function(x){return x.id===id;}); if(!p) return;
+    var inp=document.createElement('input');
+    inp.value=p.nombre;
+    inp.style.cssText='font-family:inherit;font-size:.88rem;font-weight:800;color:var(--azul);border:1.5px solid var(--naranja);border-radius:6px;padding:2px 8px;outline:none;width:220px';
+    el.replaceWith(inp); inp.focus(); inp.select();
+    function save(){var v=inp.value.trim()||p.nombre;p.nombre=v;renderResumen();toast('Nombre actualizado ✓','ok');}
+    inp.addEventListener('blur',save);
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter')save();if(e.key==='Escape'){p.nombre=p.nombre;renderResumen();}});
+}
+window.editarNombre=editarNombre;
+
+// ── CRONOGRAMA MODAL ──────────────────────────────────────────
+var modalPrestamo=null, filtroEstado='all';
+
+function abrirCronograma(id){
+    modalPrestamo=PRESTAMOS.find(function(x){return x.id===id;}); if(!modalPrestamo) return;
+    filtroEstado='all';
+    document.getElementById('feAll').className='fe-btn active-all';
+    document.getElementById('fePag').className='fe-btn';
+    document.getElementById('fePend').className='fe-btn';
+    renderModalContent();
+    document.getElementById('overlay').classList.add('open');
+}
+window.abrirCronograma=abrirCronograma;
+
+function filtrarEstado(f){
+    filtroEstado=f;
+    document.getElementById('feAll').className='fe-btn'+(f==='all'?' active-all':'');
+    document.getElementById('fePag').className='fe-btn'+(f==='Pagado'?' active-pag':'');
+    document.getElementById('fePend').className='fe-btn'+(f==='Pendiente'?' active-pend':'');
+    renderCronTabla();
+}
+window.filtrarEstado=filtrarEstado;
+
+function renderModalContent(){
+    var p=modalPrestamo;
+    var pct=p.totalCredito>0?Math.round(p.totalPagado/p.totalCredito*100):0;
+    document.getElementById('modalTitle').innerHTML=p.nombre+' <span>— Cronograma</span>';
+    document.getElementById('modalSub').textContent=p.entidad+' · '+p.totalCuotas+' cuotas · '+pct+'% pagado';
+    // KPIs
+    document.getElementById('modalKpis').innerHTML=
+        mkpi('Total Crédito','S/ '+fmt(p.totalCredito),p.color)+
+        mkpi('Total Pagado','S/ '+fmt(p.totalPagado),'#16a34a')+
+        mkpi('Total Pendiente','S/ '+fmt(p.totalPendiente),'#dc2626')+
+        mkpi('Cuotas Pagadas',p.cuotasPagadas+' / '+p.totalCuotas,'#1e40af')+
+        mkpi('Cuotas Restantes',(p.totalCuotas-p.cuotasPagadas),'#f59e0b');
+    // Thead
+    document.getElementById('cronThead').innerHTML=p.cols.map(function(c){return '<th>'+c+'</th>';}).join('');
+    renderCronTabla();
+}
+
+function mkpi(label,val,color){
+    return '<div class="mkpi"><div class="mkpi-label">'+label+'</div><div class="mkpi-val" style="color:'+color+'">'+val+'</div></div>';
+}
+
+function renderCronTabla(){
+    var p=modalPrestamo;
+    var cuotas=filtroEstado==='all'?p.cuotas:p.cuotas.filter(function(c){return c.estado===filtroEstado;});
+    var tbody=document.getElementById('cronTbody');
+    tbody.innerHTML='';
+    cuotas.forEach(function(c){
+        var tr=document.createElement('tr');
+        tr.className=c.estado==='Pagado'?'r-pag':'r-pend';
+        var pill=c.estado==='Pagado'
+            ? '<span class="pill-pag toggle-estado" onclick="toggleEstado('+p.id+','+c.n+')" title="Click para marcar como Pendiente">✓ Pagado</span>'
+            : '<span class="pill-pend toggle-estado" onclick="toggleEstado('+p.id+','+c.n+')" title="Click para marcar como Pagado">⏳ Pendiente</span>';
+        var cells='<td>'+c.n+'</td>';
+        var tipo=p.tipo;
+        if(tipo==='interbank_emp'){
+            cells+='<td>'+fmtF(c.fecha)+'</td><td>S/ '+fmt(c.saldo)+'</td><td>S/ '+fmt(c.amort)+'</td><td>S/ '+fmt(c.int)+'</td><td>S/ '+fmt(c.desgrav)+'</td><td style="font-weight:700">S/ '+fmt(c.cuota)+'</td><td>'+pill+'</td>';
+        } else if(tipo==='stander'){
+            cells+='<td>S/ '+fmt(c.capital)+'</td><td>S/ '+fmt(c.int)+'</td><td style="font-weight:700">S/ '+fmt(c.cuota)+'</td><td>'+fmtF(c.fecha)+'</td><td>'+pill+'</td>';
+        } else if(tipo==='derrama'){
+            cells+='<td>'+fmtF(c.fecha)+'</td><td>S/ '+fmt(c.capital)+'</td><td>S/ '+fmt(c.int)+'</td><td>S/ '+fmt(c.desgrav)+'</td><td>S/ '+fmt(c.comision)+'</td><td style="font-weight:700">S/ '+fmt(c.cuota)+'</td><td>'+pill+'</td>';
+        } else if(tipo==='interbank_per'){
+            cells+='<td>S/ '+fmt(c.amort)+'</td><td>S/ '+fmt(c.int)+'</td><td>S/ '+fmt(c.seguro)+'</td><td style="font-weight:700">S/ '+fmt(c.cuota)+'</td><td>'+fmtF(c.fecha)+'</td><td>'+pill+'</td>';
+        } else if(tipo==='mibanco_emp'){
+            cells+='<td>'+fmtF(c.fecha)+'</td><td>S/ '+fmt(c.cuota_base)+'</td><td>S/ '+fmt(c.int)+'</td><td>S/ '+fmt(c.comision)+'</td><td style="font-weight:700">S/ '+fmt(c.cuota)+'</td><td>'+pill+'</td>';
+        } else {
+            cells+='<td>S/ '+fmt(c.cuota)+'</td><td>S/ '+fmt(c.apagar||c.cuota)+'</td><td>'+fmtF(c.fecha)+'</td><td>'+pill+'</td>';
+        }
+        tr.innerHTML=cells;
+        tbody.appendChild(tr);
+    });
+    var pag=p.cuotas.filter(function(c){return c.estado==='Pagado';}).length;
+    var pend=p.cuotas.filter(function(c){return c.estado!=='Pagado';}).length;
+    document.getElementById('modalFootInfo').textContent=
+        p.cuotas.length+' cuotas · '+pag+' pagadas · '+pend+' pendientes · Mostrando '+cuotas.length;
+}
+
+// ── TOGGLE ESTADO CUOTA ───────────────────────────────────────
+function toggleEstado(prestamo_id, cuota_n){
+    var p=PRESTAMOS.find(function(x){return x.id===prestamo_id;}); if(!p) return;
+    var c=p.cuotas.find(function(x){return x.n===cuota_n;}); if(!c) return;
+    c.estado = c.estado==='Pagado'?'Pendiente':'Pagado';
+    recalcPrestamo(p);
+    saveEstados();
+    renderModalContent();
+    renderResumen();
+    renderKPIs();
+    toast(c.estado==='Pagado'?'Cuota '+cuota_n+' marcada como Pagada ✓':'Cuota '+cuota_n+' marcada como Pendiente','ok');
+}
+window.toggleEstado=toggleEstado;
+
+function cerrarModal(){document.getElementById('overlay').classList.remove('open');}
+window.cerrarModal=cerrarModal;
+
+// ── EXPORTAR ──────────────────────────────────────────────────
+function exportarResumen(){
+    var rows=[['Préstamo','Entidad','Total Crédito','Total Pagado','Total Pendiente','Cuotas Total','Cuotas Pagadas','Cuotas Restantes','Cuota Mensual','% Pagado']];
+    var totC=0,totP=0,totPend=0,totCu=0;
+    PRESTAMOS.forEach(function(p){
+        var pct=p.totalCredito>0?Math.round(p.totalPagado/p.totalCredito*100):0;
+        rows.push([p.nombre,p.entidad,p.totalCredito,p.totalPagado,p.totalPendiente,p.totalCuotas,p.cuotasPagadas,p.totalCuotas-p.cuotasPagadas,p.cuotaAmt,pct+'%']);
+        totC+=p.totalCredito;totP+=p.totalPagado;totPend+=p.totalPendiente;totCu+=p.cuotaAmt;
+    });
+    rows.push([]);rows.push(['TOTALES','',totC,totP,totPend,'','','',totCu,'']);
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:30},{wch:18},{wch:14},{wch:14},{wch:14},{wch:12},{wch:14},{wch:14},{wch:14},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,'Resumen');
+    XLSX.writeFile(wb,'CARZE_Finanzas_Resumen.xlsx');
+    toast('Excel generado ✓','ok');
+}
+window.exportarResumen=exportarResumen;
+
+function exportarCronograma(){
+    if(!modalPrestamo) return;
+    var p=modalPrestamo;
+    var rows=[p.cols];
+    p.cuotas.forEach(function(c){
+        var row=[c.n];
+        if(p.tipo==='interbank_emp') row=[c.n,c.fecha,c.saldo,c.amort,c.int,c.desgrav,c.cuota,c.estado];
+        else if(p.tipo==='stander') row=[c.n,c.capital,c.int,c.cuota,c.fecha,c.estado];
+        else if(p.tipo==='derrama') row=[c.n,c.fecha,c.capital,c.int,c.desgrav,c.comision,c.cuota,c.estado];
+        else if(p.tipo==='interbank_per') row=[c.n,c.amort,c.int,c.seguro,c.cuota,c.fecha,c.estado];
+        else if(p.tipo==='mibanco_emp') row=[c.n,c.fecha,c.cuota_base,c.int,c.comision,c.cuota,c.estado];
+        else row=[c.n,c.cuota,c.apagar||c.cuota,c.fecha,c.estado];
+        rows.push(row);
+    });
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb,ws,'Cronograma');
+    XLSX.writeFile(wb,'CARZE_'+p.nombre.replace(/ /g,'_')+'.xlsx');
+    toast('Excel generado ✓','ok');
+}
+window.exportarCronograma=exportarCronograma;
+
+function cerrarSesion(){
+    if(window.__auth && window.__signOut){
+        window.__signOut(window.__auth).finally(function(){
+            sessionStorage.clear();
+            window.location.replace('index.html');
+        });
+    } else {
+        sessionStorage.clear();
+        window.location.replace('index.html');
+    }
+}
+window.cerrarSesion=cerrarSesion;
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModal();});
+</script>
+</body>
+</html>
