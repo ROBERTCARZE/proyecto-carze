@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | CARZE</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--morado:#9333ea;
+  --font:'Century Gothic','CenturyGothic',Verdana,sans-serif;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sidebar-logo img{width:115px}
+.sidebar-logo span{font-size:.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:var(--light);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.1),rgba(249,115,22,.04));color:var(--naranja);border-left:3px solid var(--naranja);padding-left:9px}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+
+/* MAIN */
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-logout:hover{background:#dc2626;color:#fff}
+.fecha-badge{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--light);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px 26px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* ── FILA 1: KPIs ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.kpi-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp .4s ease both;transition:transform .18s,box-shadow .18s;text-decoration:none;display:block;cursor:pointer}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.09)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.kpi-card.k1::before{background:linear-gradient(90deg,var(--verde),#86efac)}
+.kpi-card.k2::before{background:linear-gradient(90deg,var(--rojo),#f87171)}
+.kpi-card.k3::before{background:linear-gradient(90deg,var(--azul2),#818cf8)}
+.kpi-card.k4::before{background:linear-gradient(90deg,var(--amarillo),#fbbf24)}
+.kpi-card.k5::before{background:linear-gradient(90deg,var(--morado),#c084fc)}
+.kpi-label{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.kpi-val{font-family:var(--font);font-size:1.55rem;font-weight:800;margin-bottom:3px;line-height:1}
+.kpi-card.k1 .kpi-val{color:var(--verde)}
+.kpi-card.k2 .kpi-val{color:var(--rojo)}
+.kpi-card.k3 .kpi-val{color:var(--azul2)}
+.kpi-card.k4 .kpi-val{color:var(--amarillo)}
+.kpi-card.k5 .kpi-val{color:var(--morado)}
+.kpi-sub{font-size:.65rem;color:var(--muted)}
+.kpi-trend{position:absolute;top:14px;right:16px;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.trend-up{background:#dcfce7;color:#15803d}
+.trend-dn{background:#fee2e2;color:#dc2626}
+.trend-eq{background:#f1f5f9;color:#64748b}
+.kpi-card:nth-child(1){animation-delay:.04s}.kpi-card:nth-child(2){animation-delay:.08s}
+.kpi-card:nth-child(3){animation-delay:.12s}.kpi-card:nth-child(4){animation-delay:.16s}
+
+/* ── FILA 2: GRÁFICOS ── */
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:18px}
+.chart-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;animation:fadeUp .4s ease .2s both}
+.chart-head{margin-bottom:14px}
+.chart-title{font-family:var(--font);font-size:.85rem;font-weight:800;color:var(--txt);margin-bottom:2px}
+.chart-sub{font-size:.67rem;color:var(--muted)}
+.chart-wrap{position:relative;height:200px}
+
+/* ── FILA 3: MÓDULOS ── */
+.modulos-row{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:18px}
+.mod-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;animation:fadeUp .4s ease .28s both;text-decoration:none;display:block;transition:transform .18s,box-shadow .18s}
+.mod-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.mod-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mod-title{font-family:var(--font);font-size:.82rem;font-weight:800;color:var(--azul)}
+.mod-icon{font-size:1.1rem}
+.mod-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mod-stat{text-align:center;background:var(--light);border-radius:8px;padding:8px 6px}
+.mod-stat-label{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.mod-stat-val{font-family:var(--font);font-size:.95rem;font-weight:800}
+
+/* ── FILA 4: ALERTAS RÁPIDAS ── */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px}
+.alerts-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;animation:fadeUp .4s ease .32s both}
+.alerts-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.alerts-title{font-family:var(--font);font-size:.85rem;font-weight:800;color:var(--azul)}
+.ver-todo{font-size:.68rem;font-weight:700;color:var(--naranja);text-decoration:none;transition:opacity .2s}
+.ver-todo:hover{opacity:.7}
+.alert-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.alert-item:last-child{border-bottom:none;padding-bottom:0}
+.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-r{background:var(--rojo)}.dot-a{background:var(--amarillo)}.dot-v{background:var(--verde)}
+.alert-txt{flex:1;font-size:.74rem;color:var(--txt);font-weight:600}
+.alert-meta{font-size:.66rem;color:var(--muted)}
+.alert-amt{font-family:var(--font);font-size:.78rem;font-weight:800;color:var(--txt);white-space:nowrap}
+.no-alerts{padding:20px;text-align:center;color:var(--muted);font-size:.76rem}
+
+/* ── FILA 5: COMENTARIOS IA ── */
+.ai-card{background:linear-gradient(135deg,#1a3a6b,#1e40af);border-radius:14px;padding:18px 22px;animation:fadeUp .4s ease .36s both;margin-bottom:6px}
+.ai-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.ai-icon{width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.ai-head-txt{font-family:var(--font);font-size:.88rem;font-weight:800;color:#fff}
+.ai-head-sub{font-size:.65rem;color:rgba(255,255,255,.55);margin-top:1px}
+.ai-comments{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ai-comment{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;transition:background .2s}
+.ai-comment:hover{background:rgba(255,255,255,.13)}
+.ai-comment-icon{font-size:1.1rem;margin-bottom:6px}
+.ai-comment-tipo{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;opacity:.7}
+.ai-comment-tipo.tipo-alerta{color:#f87171}
+.ai-comment-tipo.tipo-sugerencia{color:#fbbf24}
+.ai-comment-tipo.tipo-positivo{color:#86efac}
+.ai-comment-tipo.tipo-info{color:#93c5fd}
+.ai-comment-txt{font-size:.74rem;color:rgba(255,255,255,.88);line-height:1.5;font-weight:500}
+.ai-loading{color:rgba(255,255,255,.4);font-size:.78rem;text-align:center;padding:20px}
+
+.empty-card{background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:16px;text-align:center;color:var(--muted);font-size:.75rem}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.loading-pulse{animation:pulse 1.2s ease-in-out infinite;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/logo_carze_1.png" alt="CARZE">
+    <span>Contratistas Generales</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"    class="nav-item active"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="cotizaciones.html" class="nav-item"><span class="nav-icon">📋</span>Cotizaciones</a>
+    <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span>Certificados</a>
+    <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span>Facturas</a>
+    <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span>Impuestos</a>
+    <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span>Personal</a>
+    <a href="finanzas.html"     class="nav-item"><span class="nav-icon">💰</span>Finanzas</a>
+    <a href="pronto_pago.html"  class="nav-item"><span class="nav-icon">⏰</span>Pronto Pago</a>
+    <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span>Caja Diaria</a>
+    <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span>Flujo de Caja</a>
+    <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span>Vencimiento y Alertas</a>
+    <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span>Seguimiento</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Dashboard General</h1>
+      <p>Vista consolidada · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="fecha-badge" id="fechaHoy">—</div>
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- FILA 1: KPIs -->
+    <div class="kpi-row">
+      <a href="caja_diaria.html" class="kpi-card k1">
+        <div class="kpi-label">💚 Saldo de Caja</div>
+        <div class="kpi-val" id="kSaldoCaja">S/ —</div>
+        <div class="kpi-sub">Ingresos − Egresos acumulados</div>
+      </a>
+      <a href="facturas.html" class="kpi-card k2">
+        <div class="kpi-label">🧾 Facturas por Cobrar</div>
+        <div class="kpi-val" id="kFactPendiente">S/ —</div>
+        <div class="kpi-sub" id="kFactPendienteSub">— facturas emitidas</div>
+      </a>
+      <a href="cotizaciones.html" class="kpi-card k3">
+        <div class="kpi-label">📋 Cotizaciones Pendientes</div>
+        <div class="kpi-val" id="kCotPendiente">—</div>
+        <div class="kpi-sub" id="kCotPendienteSub">Por facturar</div>
+      </a>
+      <a href="finanzas.html" class="kpi-card k4">
+        <div class="kpi-label">💳 Deuda Financiera</div>
+        <div class="kpi-val" id="kDeuda">S/ —</div>
+        <div class="kpi-sub">Total pendiente préstamos</div>
+      </a>
+    </div>
+
+    <!-- FILA 2: GRÁFICOS -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Flujo Mensual de Caja</div>
+          <div class="chart-sub">Ingresos vs Egresos · Datos reales de Caja Diaria</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartFlujo"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Distribución Egresos</div>
+          <div class="chart-sub">Por categoría · Acumulado</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartDona"></canvas></div>
+      </div>
+    </div>
+
+    <!-- FILA 3: MÓDULOS -->
+    <div class="modulos-row">
+      <a href="cotizaciones.html" class="mod-card">
+        <div class="mod-head">
+          <div class="mod-title">📋 Cotizaciones</div>
+          <span class="mod-icon">→</span>
+        </div>
+        <div class="mod-stats">
+          <div class="mod-stat">
+            <div class="mod-stat-label">Pendientes</div>
+            <div class="mod-stat-val" id="mCotPend" style="color:var(--amarillo)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Facturadas</div>
+            <div class="mod-stat-val" id="mCotFact" style="color:var(--verde)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Total S/</div>
+            <div class="mod-stat-val" id="mCotTotal" style="color:var(--azul2);font-size:.78rem">—</div>
+          </div>
+        </div>
+      </a>
+      <a href="certificados.html" class="mod-card">
+        <div class="mod-head">
+          <div class="mod-title">🏅 Certificados</div>
+          <span class="mod-icon">→</span>
+        </div>
+        <div class="mod-stats">
+          <div class="mod-stat">
+            <div class="mod-stat-label">Pendientes</div>
+            <div class="mod-stat-val" id="mCertPend" style="color:var(--amarillo)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Facturados</div>
+            <div class="mod-stat-val" id="mCertFact" style="color:var(--verde)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Total S/</div>
+            <div class="mod-stat-val" id="mCertTotal" style="color:var(--azul2);font-size:.78rem">—</div>
+          </div>
+        </div>
+      </a>
+      <a href="facturas.html" class="mod-card">
+        <div class="mod-head">
+          <div class="mod-title">🧾 Facturas</div>
+          <span class="mod-icon">→</span>
+        </div>
+        <div class="mod-stats">
+          <div class="mod-stat">
+            <div class="mod-stat-label">Emitidas</div>
+            <div class="mod-stat-val" id="mFactEmit" style="color:var(--azul2)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Cobradas</div>
+            <div class="mod-stat-val" id="mFactCob" style="color:var(--verde)">—</div>
+          </div>
+          <div class="mod-stat">
+            <div class="mod-stat-label">Vencidas</div>
+            <div class="mod-stat-val" id="mFactVenc" style="color:var(--rojo)">—</div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- FILA 4: ALERTAS + PRÉSTAMOS MES -->
+    <div class="bottom-row">
+      <div class="alerts-card">
+        <div class="alerts-head">
+          <div class="alerts-title">🚨 Alertas Prioritarias</div>
+          <a href="vencimientos.html" class="ver-todo">Ver todas →</a>
+        </div>
+        <div id="alertasRapidas"><div class="no-alerts loading-pulse">Cargando alertas...</div></div>
+      </div>
+      <div class="alerts-card">
+        <div class="alerts-head">
+          <div class="alerts-title">💳 Cuotas del Mes</div>
+          <a href="finanzas.html" class="ver-todo">Ver finanzas →</a>
+        </div>
+        <div id="cuotasMes"><div class="no-alerts loading-pulse">Cargando cuotas...</div></div>
+      </div>
+    </div>
+
+    <!-- FILA 5: COMENTARIOS INTELIGENTES -->
+    <div class="ai-card">
+      <div class="ai-head">
+        <div class="ai-icon">🤖</div>
+        <div>
+          <div class="ai-head-txt">Análisis Inteligente · CARZE</div>
+          <div class="ai-head-sub">Interpretaciones automáticas basadas en tus datos en tiempo real</div>
+        </div>
+      </div>
+      <div class="ai-comments" id="aiComments">
+        <div class="ai-loading">Analizando datos...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore, collection, query, where,
+         onSnapshot, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+const firebaseConfig={
+    apiKey:"AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:"gestioncarze.firebaseapp.com",
+    projectId:"gestioncarze",
+    storageBucket:"gestioncarze.firebasestorage.app",
+    messagingSenderId:"487407475826",
+    appId:"1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+const app=initializeApp(firebaseConfig);
+const db =getFirestore(app);
+
+// ── ESTADO GLOBAL ─────────────────────────────────────────────
+var G={
+    caja:[],facturas:[],cotizaciones:[],certificados:[],
+    impuestos:[],personal:[]
+};
+var chartFlujo=null, chartDona=null;
+
+const CAT_LABELS={SCOTIABANK:'Scotiabank',INTERBANK:'Interbank',COSTOS_DIRECTOS:'Costos Directos',
+    GASTOS_DE_PERSONAL:'Personal',LOGISTICA_Y_CAMPO:'Logística',FINANCIERO_CAJA:'Financiero',
+    GASTOS_ADMINISTRATIVOS_Y_FIJOS:'Administrativo',GASTOS_INDIRECTOS:'Indirectos',AHORRO:'Ahorro'};
+const CAT_COLORS={SCOTIABANK:'#c8102e',INTERBANK:'#0033a0',COSTOS_DIRECTOS:'#1e40af',
+    GASTOS_DE_PERSONAL:'#9333ea',LOGISTICA_Y_CAMPO:'#f59e0b',FINANCIERO_CAJA:'#dc2626',
+    GASTOS_ADMINISTRATIVOS_Y_FIJOS:'#475569',GASTOS_INDIRECTOS:'#ea580c',AHORRO:'#059669'};
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+const CUOTA_MES_TOTAL=5873.36;
+const DEUDA_TOTAL=113529.97;
+
+// Préstamos con cuotas del mes
+const PRESTAMOS=[
+    {nombre:'Empresarial Interbank',cuota:2902.36,color:'#0033a0'},
+    {nombre:'Personal Stander',cuota:1067.70,color:'#7c3aed'},
+    {nombre:'Derrama Magisterial',cuota:404.17,color:'#0891b2'},
+    {nombre:'Efectiva – Jhonny (×3)',cuota:1036.37,color:'#f59e0b'},
+    {nombre:'Personal Interbank',cuota:462.76,color:'#0033a0'},
+];
+
+// ── SESIÓN ────────────────────────────────────────────────────
+(function(){if(sessionStorage.getItem('carze_logged')!=='true')window.location.replace('index.html');})();
+
+window.addEventListener('DOMContentLoaded',function(){
+    var n=sessionStorage.getItem('carze_nombre')||'Usuario';
+    document.getElementById('userName').textContent=n;
+    document.getElementById('avatarInitials').textContent=
+        n.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase()||'U';
+    var hoyD=new Date();
+    document.getElementById('fechaHoy').textContent=
+        p2(hoyD.getDate())+' '+['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][hoyD.getMonth()]+' '+hoyD.getFullYear();
+    iniciarListeners();
+    renderCuotasMes();
+});
+
+// ── HELPERS ──────────────────────────────────────────────────
+function p2(n){return n<10?'0'+n:String(n);}
+function fmt(n,dec){dec=dec!==undefined?dec:2;return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
+function fmtK(n){var v=parseFloat(n||0);if(Math.abs(v)>=1000)return 'S/ '+fmt(v/1000,1)+'k';return 'S/ '+fmt(v,0);}
+function mesKey(fecha){return String(fecha||'').substring(0,7);}
+function diasHasta(v){if(!v||v==='-')return null;var s=String(v).trim().substring(0,10);if(!s.match(/^\d{4}-\d{2}-\d{2}/))return null;var d=new Date(s+'T00:00:00'),h=new Date();h.setHours(0,0,0,0);return Math.round((d-h)/(1000*60*60*24));}
+
+// ── LISTENERS ────────────────────────────────────────────────
+function iniciarListeners(){
+    // Caja diaria
+    onSnapshot(query(collection(db,'caja_diaria'),orderBy('fecha','asc')),function(snap){
+        G.caja=snap.docs.map(function(d){return d.data();});
+        renderKPIsCaja(); renderGraficos(); generarComentarios();
+    });
+    // Facturas
+    onSnapshot(collection(db,'facturas'),function(snap){
+        G.facturas=snap.docs.map(function(d){return d.data();});
+        renderKPIsFacturas(); renderAlertas(); generarComentarios();
+    });
+    // Cotizaciones
+    onSnapshot(collection(db,'cotizaciones'),function(snap){
+        G.cotizaciones=snap.docs.map(function(d){return d.data();});
+        renderModuloCot(); generarComentarios();
+    });
+    // Certificados
+    onSnapshot(collection(db,'certificados'),function(snap){
+        G.certificados=snap.docs.map(function(d){return d.data();});
+        renderModuloCert(); generarComentarios();
+    });
+    // Impuestos pendientes
+    onSnapshot(query(collection(db,'impuestos_declaraciones'),where('estado','==','pendiente')),function(snap){
+        G.impuestos=snap.docs.map(function(d){return d.data();});
+        renderAlertas(); generarComentarios();
+    });
+    // Personal
+    onSnapshot(collection(db,'personal'),function(snap){
+        G.personal=snap.docs.map(function(d){return d.data();});
+        generarComentarios();
+    });
+}
+
+// ── KPIs CAJA ─────────────────────────────────────────────────
+function renderKPIsCaja(){
+    var ing=0,eg=0;
+    G.caja.forEach(function(r){var m=parseFloat(r.monto)||0;if(r.tipo==='ingreso')ing+=m;else eg+=m;});
+    var saldo=ing-eg;
+    var el=document.getElementById('kSaldoCaja');
+    el.textContent='S/ '+fmt(saldo,0);
+    el.style.color=saldo<500?'var(--rojo)':saldo<2000?'var(--amarillo)':'var(--verde)';
+    document.getElementById('kDeuda').textContent='S/ '+fmt(DEUDA_TOTAL,0);
+}
+
+// ── KPIs FACTURAS ─────────────────────────────────────────────
+function renderKPIsFacturas(){
+    var emitidas=G.facturas.filter(function(r){return r.estado==='Emitida'||r.estado==='Vencida';});
+    var totalPendiente=emitidas.reduce(function(s,r){return s+(parseFloat(r.total)||0);},0);
+    document.getElementById('kFactPendiente').textContent='S/ '+fmt(totalPendiente,0);
+    document.getElementById('kFactPendienteSub').textContent=emitidas.length+' factura'+(emitidas.length!==1?'s':'')+' pendientes de cobro';
+    // Módulo facturas
+    var cobradas=G.facturas.filter(function(r){return r.estado==='Cobrada';}).length;
+    var vencidas=G.facturas.filter(function(r){return r.estado==='Vencida';}).length;
+    document.getElementById('mFactEmit').textContent=emitidas.length;
+    document.getElementById('mFactCob').textContent=cobradas;
+    document.getElementById('mFactVenc').textContent=vencidas;
+}
+
+// ── MÓDULO COTIZACIONES ───────────────────────────────────────
+function renderModuloCot(){
+    var pend=G.cotizaciones.filter(function(r){return (r.estado||'').toLowerCase()==='pendiente';});
+    var fact=G.cotizaciones.filter(function(r){return (r.estado||'').toLowerCase()==='facturado';});
+    var totalPend=pend.reduce(function(s,r){return s+(parseFloat(r.subtotal)||0);},0);
+    document.getElementById('mCotPend').textContent=pend.length;
+    document.getElementById('mCotFact').textContent=fact.length;
+    document.getElementById('mCotTotal').textContent='S/ '+fmt(totalPend,0);
+    document.getElementById('kCotPendiente').textContent=pend.length;
+    document.getElementById('kCotPendienteSub').textContent='S/ '+fmt(totalPend,0)+' por facturar';
+}
+
+// ── MÓDULO CERTIFICADOS ───────────────────────────────────────
+function renderModuloCert(){
+    var pend=G.certificados.filter(function(r){return (r.estado||'').toLowerCase()==='pendiente';});
+    var fact=G.certificados.filter(function(r){return (r.estado||'').toLowerCase()==='facturado';});
+    var totalPend=pend.reduce(function(s,r){return s+(parseFloat(r.subtotal)||0);},0);
+    document.getElementById('mCertPend').textContent=pend.length;
+    document.getElementById('mCertFact').textContent=fact.length;
+    document.getElementById('mCertTotal').textContent='S/ '+fmt(totalPend,0);
+}
+
+// ── GRÁFICOS ─────────────────────────────────────────────────
+function renderGraficos(){
+    var meses={};
+    G.caja.forEach(function(r){
+        var mk=mesKey(r.fecha);
+        if(!meses[mk])meses[mk]={ing:0,eg:0};
+        var m=parseFloat(r.monto)||0;
+        if(r.tipo==='ingreso')meses[mk].ing+=m;else meses[mk].eg+=m;
+    });
+    var keys=Object.keys(meses).sort();
+    var labels=keys.map(function(k){var p=k.split('-');return MESES[parseInt(p[1])-1]+' '+p[0];});
+    var ingData=keys.map(function(k){return meses[k].ing;});
+    var egData =keys.map(function(k){return meses[k].eg;});
+    var saldoData=[];var acum=0;
+    keys.forEach(function(k){acum+=meses[k].ing-meses[k].eg;saldoData.push(acum);});
+
+    // Chart flujo
+    if(chartFlujo)chartFlujo.destroy();
+    chartFlujo=new Chart(document.getElementById('chartFlujo'),{
+        type:'bar',
+        data:{labels:labels,datasets:[
+            {label:'Ingresos',data:ingData,backgroundColor:'rgba(22,163,74,.7)',borderRadius:5,borderSkipped:false,order:2},
+            {label:'Egresos', data:egData, backgroundColor:'rgba(220,38,38,.65)',borderRadius:5,borderSkipped:false,order:2},
+            {label:'Saldo Neto',data:saldoData,type:'line',borderColor:'#1e40af',backgroundColor:'rgba(30,64,175,.08)',
+             borderWidth:2.5,pointBackgroundColor:'#1e40af',pointRadius:3,tension:0.3,fill:true,order:1,yAxisID:'y1'}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{labels:{boxWidth:10,font:{size:10,family:'Verdana'}}},
+                tooltip:{callbacks:{label:function(c){return ' '+c.dataset.label+': S/ '+fmt(c.parsed.y||0,0);}}}},
+            scales:{
+                x:{grid:{display:false},ticks:{font:{size:9,family:'Verdana'}}},
+                y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:9,family:'Verdana'},callback:function(v){return 'S/'+Math.round(v/1000)+'k';}}},
+                y1:{position:'right',grid:{display:false},ticks:{font:{size:9,family:'Verdana'},callback:function(v){return 'S/'+Math.round(v/1000)+'k';}}}
+            }}
+    });
+
+    // Chart dona egresos por categoría
+    var cats={};
+    G.caja.forEach(function(r){
+        if(r.tipo!=='ingreso'){
+            var c=CAT_LABELS[r.categoria]||r.categoria||'Otro';
+            cats[c]=(cats[c]||0)+(parseFloat(r.monto)||0);
+        }
+    });
+    var cKeys=Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];});
+    var cColors=cKeys.map(function(k){
+        var orig=Object.keys(CAT_LABELS).find(function(c){return CAT_LABELS[c]===k;});
+        return CAT_COLORS[orig]||'#94a3b8';
+    });
+    if(chartDona)chartDona.destroy();
+    if(cKeys.length){
+        chartDona=new Chart(document.getElementById('chartDona'),{
+            type:'doughnut',
+            data:{labels:cKeys,datasets:[{data:cKeys.map(function(k){return cats[k];}),backgroundColor:cColors,borderWidth:0,hoverOffset:5}]},
+            options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+                plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:6,font:{size:9,family:'Verdana'}}}}}
+        });
+    }
+}
+
+// ── ALERTAS RÁPIDAS ───────────────────────────────────────────
+function renderAlertas(){
+    var alertas=[];
+    // Facturas vencidas
+    G.facturas.filter(function(r){return r.estado==='Vencida';}).forEach(function(r){
+        var dias=diasHasta(r.fechaVenc);
+        alertas.push({nivel:'r',txt:(r.serie||'')+'-'+(r.numFact||'')+' — '+(r.cliente||r.razonSocial||''),
+            meta:'Venció hace '+Math.abs(dias||0)+' días',amt:'S/ '+fmt(r.total||0,0),ord:-999+(dias||0)});
+    });
+    // Facturas por vencer pronto
+    G.facturas.filter(function(r){return r.estado==='Emitida';}).forEach(function(r){
+        var dias=diasHasta(r.fechaVenc);
+        if(dias!==null&&dias<=7){
+            alertas.push({nivel:'a',txt:(r.serie||'')+'-'+(r.numFact||'')+' — '+(r.cliente||r.razonSocial||''),
+                meta:'Vence en '+dias+' día'+(dias!==1?'s':''),amt:'S/ '+fmt(r.total||0,0),ord:dias});
+        }
+    });
+    // Impuestos pendientes
+    G.impuestos.forEach(function(r){
+        alertas.push({nivel:'a',txt:'Declaración '+r.periodo,
+            meta:'SUNAT pendiente de pago',amt:'S/ '+fmt(r.totalPagar||0,0),ord:-500});
+    });
+    // Saldo caja
+    var ing=0,eg=0;
+    G.caja.forEach(function(r){var m=parseFloat(r.monto)||0;if(r.tipo==='ingreso')ing+=m;else eg+=m;});
+    var saldo=ing-eg;
+    if(saldo<500){
+        alertas.push({nivel:'r',txt:'Saldo de Caja Bajo',
+            meta:'S/ '+fmt(saldo,0)+' disponible',amt:'⚠️ Atención',ord:-1000});
+    }
+
+    alertas.sort(function(a,b){return a.ord-b.ord;});
+    var cont=document.getElementById('alertasRapidas');
+    if(!alertas.length){
+        cont.innerHTML='<div class="no-alerts">✅ Sin alertas urgentes en este momento</div>';
+        return;
+    }
+    var html='';
+    alertas.slice(0,5).forEach(function(a){
+        html+='<div class="alert-item">'+
+            '<div class="alert-dot dot-'+a.nivel+'"></div>'+
+            '<div style="flex:1;min-width:0">'+
+                '<div class="alert-txt" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+a.txt+'</div>'+
+                '<div class="alert-meta">'+a.meta+'</div>'+
+            '</div>'+
+            '<div class="alert-amt">'+a.amt+'</div>'+
+        '</div>';
+    });
+    cont.innerHTML=html;
+}
+
+// ── CUOTAS DEL MES ────────────────────────────────────────────
+function renderCuotasMes(){
+    var hoyD=new Date();
+    var mesLabel=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoyD.getMonth()]+' '+hoyD.getFullYear();
+    var html='';
+    PRESTAMOS.forEach(function(p){
+        html+='<div class="alert-item">'+
+            '<div class="alert-dot" style="background:'+p.color+'"></div>'+
+            '<div style="flex:1">'+
+                '<div class="alert-txt">'+p.nombre+'</div>'+
+                '<div class="alert-meta">'+mesLabel+'</div>'+
+            '</div>'+
+            '<div class="alert-amt">S/ '+fmt(p.cuota,2)+'</div>'+
+        '</div>';
+    });
+    html+='<div style="padding:8px 0 0;border-top:1.5px solid var(--border);margin-top:4px;display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:.72rem;font-weight:800;color:var(--muted)">TOTAL CUOTAS</span>'+
+        '<span style="font-family:var(--font);font-size:.92rem;font-weight:800;color:var(--naranja)">S/ '+fmt(CUOTA_MES_TOTAL,2)+'</span>'+
+    '</div>';
+    document.getElementById('cuotasMes').innerHTML=html;
+}
+
+// ── COMENTARIOS INTELIGENTES ──────────────────────────────────
+function generarComentarios(){
+    var comentarios=[];
+
+    // ── Análisis Caja ──
+    var ing=0,eg=0;
+    G.caja.forEach(function(r){var m=parseFloat(r.monto)||0;if(r.tipo==='ingreso')ing+=m;else eg+=m;});
+    var saldoCaja=ing-eg;
+    var pctGasto=ing>0?Math.round(eg/ing*100):0;
+
+    if(saldoCaja<0){
+        comentarios.push({icon:'🚨',tipo:'alerta',tituloTipo:'ALERTA CRÍTICA',
+            txt:'Tu saldo de caja es negativo (S/ '+fmt(saldoCaja,0)+'). Los egresos superan los ingresos. Revisa los movimientos recientes de inmediato.'});
+    } else if(saldoCaja<500){
+        comentarios.push({icon:'⚠️',tipo:'alerta',tituloTipo:'ALERTA',
+            txt:'Saldo de caja bajo: S/ '+fmt(saldoCaja,0)+'. Considera programar un ingreso antes de los próximos pagos de planilla o cuotas.'});
+    } else if(pctGasto>80){
+        comentarios.push({icon:'📊',tipo:'sugerencia',tituloTipo:'SUGERENCIA',
+            txt:'El '+pctGasto+'% de tus ingresos se destinan a egresos. Evalúa si hay categorías que pueden optimizarse, especialmente Costos Directos y Personal.'});
+    } else {
+        comentarios.push({icon:'💚',tipo:'positivo',tituloTipo:'POSITIVO',
+            txt:'Saldo de caja saludable: S/ '+fmt(saldoCaja,0)+'. El ratio egresos/ingresos es del '+pctGasto+'%, dentro de un rango manejable.'});
+    }
+
+    // ── Análisis Cotizaciones ──
+    var cotPend=G.cotizaciones.filter(function(r){return (r.estado||'').toLowerCase()==='pendiente';});
+    var cotPendMonto=cotPend.reduce(function(s,r){return s+(parseFloat(r.subtotal)||0);},0);
+    if(cotPend.length>0){
+        // Días promedio pendiente
+        var hoyD=new Date(); hoyD.setHours(0,0,0,0);
+        var diasProm=0;
+        cotPend.forEach(function(r){
+            if(r.fecha){var f=new Date(String(r.fecha).substring(0,10)+'T00:00:00');diasProm+=Math.round((hoyD-f)/(1000*60*60*24));}
+        });
+        diasProm=Math.round(diasProm/cotPend.length);
+        if(diasProm>45){
+            comentarios.push({icon:'⏰',tipo:'alerta',tituloTipo:'ATENCIÓN',
+                txt:'Tienes '+cotPend.length+' cotizaciones pendientes con un promedio de '+diasProm+' días sin facturar (S/ '+fmt(cotPendMonto,0)+'). Considera hacer seguimiento activo.'});
+        } else {
+            comentarios.push({icon:'📋',tipo:'info',tituloTipo:'INFORMACIÓN',
+                txt:'Hay '+cotPend.length+' cotizaciones pendientes por S/ '+fmt(cotPendMonto,0)+'. Promedio de '+diasProm+' días desde emisión. Módulo de Seguimiento puede ayudarte a priorizarlas.'});
+        }
+    }
+
+    // ── Análisis Facturas ──
+    var factVenc=G.facturas.filter(function(r){return r.estado==='Vencida';});
+    var factEmit=G.facturas.filter(function(r){return r.estado==='Emitida';});
+    var montoVenc=factVenc.reduce(function(s,r){return s+(parseFloat(r.total)||0);},0);
+    var montoEmit=factEmit.reduce(function(s,r){return s+(parseFloat(r.total)||0);},0);
+    if(factVenc.length>0){
+        comentarios.push({icon:'🧾',tipo:'alerta',tituloTipo:'ALERTA COBRO',
+            txt:factVenc.length+' factura'+(factVenc.length>1?'s':'')+' vencida'+(factVenc.length>1?'s':'')+' por cobrar: S/ '+fmt(montoVenc,0)+'. Contacta a los clientes para gestionar el pago a la brevedad.'});
+    } else if(factEmit.length>0){
+        var proxVenc=factEmit.filter(function(r){var d=diasHasta(r.fechaVenc);return d!==null&&d<=15;});
+        if(proxVenc.length>0){
+            comentarios.push({icon:'📅',tipo:'sugerencia',tituloTipo:'PRÓXIMO VENCIMIENTO',
+                txt:proxVenc.length+' factura'+(proxVenc.length>1?'s':'')+' vence'+(proxVenc.length>1?'n':'')+' en los próximos 15 días (S/ '+fmt(proxVenc.reduce(function(s,r){return s+(parseFloat(r.total)||0);},0),0)+'). Prepara el seguimiento de cobro.'});
+        }
+    }
+
+    // ── Análisis Impuestos ──
+    if(G.impuestos.length>0){
+        var totalImp=G.impuestos.reduce(function(s,r){return s+(parseFloat(r.totalPagar)||0);},0);
+        var puedeConDetrac=saldoCaja>=totalImp;
+        comentarios.push({icon:'🏛️',tipo:puedeConDetrac?'sugerencia':'alerta',tituloTipo:puedeConDetrac?'SUGERENCIA SUNAT':'ALERTA SUNAT',
+            txt:G.impuestos.length+' declaración'+(G.impuestos.length>1?'es':'')+' SUNAT pendiente'+(G.impuestos.length>1?'s':'')+' por S/ '+fmt(totalImp,0)+
+            (puedeConDetrac?'. Tu saldo de caja permite cubrirlo. Recuerda declarar antes de la fecha límite.':'. Verifica tu cuenta de detracciones para cubrir el pago.')});
+    } else {
+        comentarios.push({icon:'✅',tipo:'positivo',tituloTipo:'SUNAT AL DÍA',
+            txt:'No tienes declaraciones SUNAT pendientes. ¡Excelente! Mantén el registro mensual actualizado para evitar multas.'});
+    }
+
+    // ── Análisis Personal ──
+    if(G.personal.length>0){
+        var activos=G.personal.filter(function(r){return r.estado==='Activo';}).length;
+        var temporales=G.personal.filter(function(r){return r.tipo==='Temporal'&&r.estado==='Activo';}).length;
+        comentarios.push({icon:'👥',tipo:'info',tituloTipo:'EQUIPO',
+            txt:'Tienes '+activos+' persona'+(activos!==1?'s':'')+' activa'+(activos!==1?'s':'')+' en tu equipo, '+
+            (temporales>0?temporales+' temporal'+(temporales>1?'es':'')+'. Recuerda actualizar los estados cuando termine cada servicio.':'todas en planilla.')});
+    }
+
+    // ── Análisis Cuotas vs Caja ──
+    var cubiertas=saldoCaja>=CUOTA_MES_TOTAL;
+    comentarios.push({icon:'💳',tipo:cubiertas?'positivo':'alerta',tituloTipo:cubiertas?'PRÉSTAMOS OK':'ATENCIÓN PRÉSTAMOS',
+        txt:'Cuota total de préstamos este mes: S/ '+fmt(CUOTA_MES_TOTAL,2)+
+        (cubiertas?'. Tu saldo de caja (S/ '+fmt(saldoCaja,0)+') cubre las cuotas sin problemas.':
+        '. Tu saldo de caja (S/ '+fmt(saldoCaja,0)+') es insuficiente para cubrir todas las cuotas. Planifica ingresos.')});
+
+    // Renderizar máximo 6 comentarios
+    var html='';
+    var tipoMap={alerta:'tipo-alerta',sugerencia:'tipo-sugerencia',positivo:'tipo-positivo',info:'tipo-info'};
+    comentarios.slice(0,6).forEach(function(c){
+        html+='<div class="ai-comment">'+
+            '<div class="ai-comment-icon">'+c.icon+'</div>'+
+            '<div class="ai-comment-tipo '+tipoMap[c.tipo]+'">'+c.tituloTipo+'</div>'+
+            '<div class="ai-comment-txt">'+c.txt+'</div>'+
+        '</div>';
+    });
+    document.getElementById('aiComments').innerHTML=html;
+}
+
+function cerrarSesion(){sessionStorage.clear();window.location.replace('index.html');}
+window.cerrarSesion=cerrarSesion;
+</script>
+</body>
+</html>
