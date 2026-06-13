@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pronto Pago | CARZE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--morado:#9333ea;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:50;overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sidebar-logo img{width:115px}
+.sidebar-logo span{font-size:.58rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:9px;cursor:pointer;text-decoration:none;color:var(--muted);font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:all .18s;margin-bottom:2px}
+.nav-item:hover{background:var(--light);color:var(--txt)}
+.nav-item.active{background:linear-gradient(90deg,rgba(249,115,22,.1),rgba(249,115,22,.04));color:var(--naranja);border-left:3px solid var(--naranja);padding-left:9px}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.content{flex:1;overflow-y:auto;padding:22px 28px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp .4s ease both}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.k1::before{background:linear-gradient(90deg,var(--azul2),#818cf8)}
+.kpi-card.k2::before{background:linear-gradient(90deg,var(--rojo),#f87171)}
+.kpi-card.k3::before{background:linear-gradient(90deg,var(--verde),#86efac)}
+.kpi-card.k4::before{background:linear-gradient(90deg,var(--amarillo),#fbbf24)}
+.kpi-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.kpi-value{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:3px}
+.kpi-card.k1 .kpi-value{color:var(--azul2)}
+.kpi-card.k2 .kpi-value{color:var(--rojo)}
+.kpi-card.k3 .kpi-value{color:var(--verde)}
+.kpi-card.k4 .kpi-value{color:var(--amarillo)}
+.kpi-sub{font-size:.68rem;color:var(--muted)}
+.kpi-card:nth-child(1){animation-delay:.05s}.kpi-card:nth-child(2){animation-delay:.1s}
+.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:.2s}
+
+/* INFO BANNER */
+.info-banner{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #bfdbfe;border-radius:14px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;animation:fadeUp .4s ease .15s both}
+.info-banner-icon{font-size:1.6rem;flex-shrink:0}
+.info-banner-txt{font-size:.78rem;color:var(--azul2);line-height:1.6}
+.info-banner-txt strong{font-weight:800}
+
+/* FILTROS */
+.filtros-bar{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-wrap input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--border);border-radius:9px;font-size:.79rem;font-family:inherit;color:var(--txt);background:var(--white);transition:all .2s}
+.search-wrap input:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.search-wrap input::placeholder{color:var(--muted)}
+.sicon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.fselect{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:.79rem;font-family:inherit;color:var(--txt);background:var(--white);cursor:pointer;transition:all .2s}
+.fselect:focus{outline:none;border-color:var(--naranja)}
+
+/* BOTONES */
+.btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border:none;border-radius:9px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-excel{background:var(--verde);color:#fff}
+.btn-excel:hover{background:#15803d;transform:translateY(-1px)}
+
+/* TABLA */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.section-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--azul)}
+.section-title span{color:var(--naranja)}
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeUp .4s ease .3s both}
+.table-hbar{padding:11px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.tcount{background:var(--light);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.67rem;font-weight:700;color:var(--muted)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1050px}
+thead tr{background:var(--azul)}
+thead th{padding:10px 12px;text-align:left;font-size:.63rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+thead th:first-child{padding-left:16px}
+thead th:last-child{padding-right:16px}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--light)}
+tbody td{padding:10px 12px;font-size:.76rem;color:var(--txt);white-space:nowrap}
+tbody td:first-child{padding-left:16px;font-weight:700;color:var(--azul)}
+tbody td:last-child{padding-right:16px}
+.empty-state{padding:60px;text-align:center;color:var(--muted);font-size:.82rem;display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty-state .ei{font-size:3rem;opacity:.2}
+.doc-link{color:var(--azul2);font-weight:600;text-decoration:underline;font-size:.73rem}
+.doc-link:hover{color:var(--naranja)}
+
+/* MODAL UPLOAD */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:92%;max-width:520px;box-shadow:0 30px 80px rgba(0,0,0,.22);transform:translateY(24px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;position:relative}
+.overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:18px 18px 0 0}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px}
+.modal-head h2{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--azul)}
+.modal-head h2 span{color:var(--naranja)}
+.modal-close{width:32px;height:32px;background:var(--light);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:#fff1f2;border-color:#fecdd3;color:#dc2626}
+.modal-body{padding:0 24px 24px}
+.modal-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.btn-cancel{background:var(--light);border:1.5px solid var(--border);color:var(--muted);font-family:inherit;font-size:.8rem;font-weight:700;padding:9px 20px;border-radius:9px;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:#fecdd3;color:#dc2626}
+.btn-save{background:var(--naranja);border:none;color:#fff;font-family:inherit;font-size:.82rem;font-weight:800;padding:10px 26px;border-radius:9px;cursor:pointer;transition:all .2s}
+.btn-save:hover{background:var(--naranja2);transform:translateY(-1px)}
+.btn-save:disabled{background:#cbd5e1;cursor:not-allowed;transform:none}
+
+/* DETALLE FACTURA EN MODAL */
+.fact-detail{background:var(--light);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px}
+.fact-detail-title{font-size:.7rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.fact-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+.fd-item label{font-size:.63rem;font-weight:700;color:var(--muted);display:block;margin-bottom:2px}
+.fd-item span{font-size:.8rem;font-weight:700;color:var(--txt)}
+
+/* UPLOAD AREA */
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;transition:all .2s;cursor:pointer;position:relative;background:#fafafa}
+.upload-area:hover{border-color:var(--naranja);background:#fff8f5}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-area-icon{font-size:2rem;margin-bottom:8px}
+.upload-area-txt{font-size:.78rem;color:var(--muted);font-weight:600}
+.upload-area-txt strong{color:var(--naranja)}
+.upload-prog{height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:10px;display:none}
+.upload-prog-fill{height:100%;background:linear-gradient(90deg,var(--azul),var(--naranja));border-radius:4px;width:0%;transition:width .2s}
+.upload-status{font-size:.72rem;margin-top:6px;font-weight:600;display:none}
+.upload-done{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:10px;display:none;align-items:center;gap:10px;justify-content:space-between}
+.upload-done-name{font-size:.75rem;font-weight:700;color:var(--azul2)}
+.upload-done-rm{font-size:.65rem;color:#dc2626;cursor:pointer;padding:2px 8px;border:1px solid #fecaca;border-radius:6px;background:#fff1f2}
+.upload-done-rm:hover{background:#dc2626;color:#fff}
+.frow{margin-bottom:14px}
+.frow label{display:block;font-size:.72rem;font-weight:700;color:var(--txt);margin-bottom:5px}
+.finput{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;color:var(--txt);background:#fff;transition:all .2s}
+.finput:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.finput::placeholder{color:#94a3b8}
+
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:.82rem;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#16a34a}.toast.err{background:#dc2626}.toast.warn{background:#f59e0b}
+.mascota{position:fixed;bottom:0;left:calc(var(--sw)+12px);width:86px;pointer-events:none;z-index:10;opacity:.82}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <img src="img/logo_carze_1.png" alt="CARZE">
+    <span>Contratistas Generales</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"    class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="cotizaciones.html" class="nav-item"><span class="nav-icon">📋</span>Cotizaciones</a>
+    <a href="certificados.html" class="nav-item"><span class="nav-icon">🏅</span>Certificados</a>
+    <a href="facturas.html"     class="nav-item"><span class="nav-icon">🧾</span>Facturas</a>
+    <a href="impuestos.html"    class="nav-item"><span class="nav-icon">🏛️</span>Impuestos</a>
+    <a href="personal.html"     class="nav-item"><span class="nav-icon">👥</span>Personal</a>
+    <a href="finanzas.html"     class="nav-item"><span class="nav-icon">💰</span>Finanzas</a>
+    <a href="pronto_pago.html"  class="nav-item active"><span class="nav-icon">⏰</span>Pronto Pago</a>
+    <a href="caja_diaria.html"  class="nav-item"><span class="nav-icon">💵</span>Caja Diaria</a>
+    <a href="flujo_caja.html"   class="nav-item"><span class="nav-icon">📈</span>Flujo de Caja</a>
+    <a href="vencimientos.html" class="nav-item"><span class="nav-icon">🚨</span>Vencimiento y Alertas</a>
+    <a href="seguimiento.html"  class="nav-item"><span class="nav-icon">🔍</span>Seguimiento</a>
+    <a href="eventos.html"      class="nav-item"><span class="nav-icon">📅</span>Eventos</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Factoring / Pronto Pago</h1>
+      <p>Operaciones de factoring · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card k1">
+        <div class="kpi-label">🧾 Facturas en Factoring</div>
+        <div class="kpi-value" id="kCount">0</div>
+        <div class="kpi-sub">Con nota de crédito</div>
+      </div>
+      <div class="kpi-card k2">
+        <div class="kpi-label">💸 Total Descontado</div>
+        <div class="kpi-value" id="kDescuento">S/ 0</div>
+        <div class="kpi-sub">Suma de notas de crédito</div>
+      </div>
+      <div class="kpi-card k3">
+        <div class="kpi-label">💰 Monto Neto Recibido</div>
+        <div class="kpi-value" id="kNeto">S/ 0</div>
+        <div class="kpi-sub">Total − Descuento</div>
+      </div>
+      <div class="kpi-card k4">
+        <div class="kpi-label">📎 Con PDF Banco</div>
+        <div class="kpi-value" id="kConPDF">0</div>
+        <div class="kpi-sub">Operaciones documentadas</div>
+      </div>
+    </div>
+
+    <!-- BANNER INFO -->
+    <div class="info-banner">
+      <div class="info-banner-icon">🏦</div>
+      <div class="info-banner-txt">
+        <strong>Factoring automático</strong> — Este módulo muestra todas las facturas con estado <strong>Cobrada</strong> y nota de crédito tipo <strong>Factoring</strong>
+        registradas en el módulo de Facturas. Aquí puedes subir el <strong>PDF de la operación bancaria</strong> de cada una.
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros-bar">
+      <div class="search-wrap">
+        <svg class="sicon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por factura, cliente, N° nota crédito..." oninput="aplicarFiltros()">
+      </div>
+      <select class="fselect" id="filterCliente" onchange="aplicarFiltros()">
+        <option value="">Todos los clientes</option>
+      </select>
+      <select class="fselect" id="filterPDF" onchange="aplicarFiltros()">
+        <option value="">Con y sin PDF banco</option>
+        <option value="con">✅ Con PDF banco</option>
+        <option value="sin">📭 Sin PDF banco</option>
+      </select>
+      <div style="flex:1"></div>
+      <button class="btn btn-excel" onclick="exportarExcel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        Excel
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="section-head">
+      <div class="section-title">Operaciones de <span>Factoring</span></div>
+      <div class="tcount" id="tableCount" style="padding:5px 12px;background:var(--white);border:1px solid var(--border);border-radius:20px;font-size:.7rem;font-weight:700;color:var(--muted)">0 registros</div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>Factura</th>
+            <th>Fecha Emisión</th>
+            <th>Cliente</th>
+            <th>RUC</th>
+            <th>Total Factura</th>
+            <th>N° Nota de Crédito</th>
+            <th>Descuento (NC)</th>
+            <th>Monto Neto</th>
+            <th>PDF Factura</th>
+            <th>PDF Banco</th>
+            <th>Acciones</th>
+          </tr></thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState">
+        <div class="ei">🏦</div>
+        <p>No hay facturas con Factoring registradas.<br>
+        Ve al módulo de <strong>Facturas</strong>, marca una factura como <strong>Cobrada</strong> y asígnale una <strong>Nota de Crédito Factoring</strong>.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<img src="img/mascota_carze.png" alt="" class="mascota" onerror="this.style.display='none'">
+<div class="toast" id="toast"></div>
+
+<!-- MODAL SUBIR PDF BANCO -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)cerrarModal()">
+<div class="modal">
+  <div class="modal-head">
+    <h2>PDF <span>Operación Banco</span></h2>
+    <button class="modal-close" onclick="cerrarModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <!-- Detalle factura -->
+    <div class="fact-detail">
+      <div class="fact-detail-title">📋 Datos de la Operación</div>
+      <div class="fact-detail-grid">
+        <div class="fd-item"><label>Factura</label><span id="detFactura">—</span></div>
+        <div class="fd-item"><label>Cliente</label><span id="detCliente">—</span></div>
+        <div class="fd-item"><label>Total Factura</label><span id="detTotal">—</span></div>
+        <div class="fd-item"><label>N° Nota de Crédito</label><span id="detNC">—</span></div>
+        <div class="fd-item"><label>Descuento Factoring</label><span id="detDescuento" style="color:var(--rojo)">—</span></div>
+        <div class="fd-item"><label>Monto Neto</label><span id="detNeto" style="color:var(--verde)">—</span></div>
+      </div>
+    </div>
+
+    <!-- Upload PDF -->
+    <div class="frow">
+      <label>Subir PDF del Banco <span style="color:var(--naranja)">*</span></label>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" accept=".pdf" onchange="handleUpload(event)">
+        <div class="upload-area-icon">📄</div>
+        <div class="upload-area-txt">Click para seleccionar o arrastra el PDF aquí<br><strong>Solo archivos PDF</strong></div>
+        <div class="upload-prog" id="uploadProg"><div class="upload-prog-fill" id="uploadProgFill"></div></div>
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
+      <div class="upload-done" id="uploadDone">
+        <span class="upload-done-name" id="uploadDoneName"></span>
+        <span class="upload-done-rm" onclick="removeUpload()">✕ Quitar</span>
+      </div>
+    </div>
+
+    <div class="frow">
+      <label>Referencia / Notas (opcional)</label>
+      <input class="finput" id="fReferencia" placeholder="Ej: Op. Factoring BCP Junio 2026, N° operación...">
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+    <button class="btn-save" id="btnGuardar" onclick="guardarPDF()"><span id="btnGuardarTxt">GUARDAR</span></button>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getFirestore, collection, query, where,
+         onSnapshot, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getStorage, ref as sRef,
+         uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
+
+const firebaseConfig={
+    apiKey:"AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:"gestioncarze.firebaseapp.com",
+    projectId:"gestioncarze",
+    storageBucket:"gestioncarze.firebasestorage.app",
+    messagingSenderId:"487407475826",
+    appId:"1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+    const auth = getAuth(app);
+const storage = getStorage(app);
+
+var datos=[], datosFiltrados=[], editId=null;
+var uploadData={nombre:null,url:null};
+
+// ── SESIÓN ────────────────────────────────────────────────────
+// Verificar autenticación Firebase real
+    onAuthStateChanged(auth, function(user){
+        if(!user){
+            window.location.replace('index.html');
+            return;
+        }
+        // Mantener nombre en sessionStorage para mostrar en UI
+        if(!sessionStorage.getItem('carze_nombre') && user.email){
+            var nombres = {
+                'proyectos@carzesac.com': 'Jans Carrillo',
+                'logistica@carzesac.com': 'Edwduar Carrillo',
+                'informes@carzesac.com':  'Jhonny Carrillo',
+                'robertcz@carzesac.com':  'Robert Carrillo Zeña',
+            };
+            sessionStorage.setItem('carze_logged','true');
+            sessionStorage.setItem('carze_nombre', nombres[user.email]||user.email.split('@')[0]);
+            sessionStorage.setItem('carze_uid',    user.uid);
+            sessionStorage.setItem('carze_email',  user.email);
+        }
+    });
+
+window.addEventListener('DOMContentLoaded',function(){
+    var n=sessionStorage.getItem('carze_nombre')||'Usuario';
+    document.getElementById('userName').textContent=n;
+    document.getElementById('avatarInitials').textContent=
+        n.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase()||'U';
+    iniciarListener();
+});
+
+// ── LISTENER — solo facturas Cobradas con ncTipo Factoring ───
+function iniciarListener(){
+    var q=query(
+        collection(db,'facturas'),
+        where('estado','==','Cobrada'),
+        where('ncTipo','==','Factoring')
+    );
+    onSnapshot(q,function(snap){
+        datos=snap.docs.map(function(d){var r=d.data();r._id=d.id;return r;});
+        // Ordenar por fecha emisión descendente
+        datos.sort(function(a,b){
+            return String(b.fechaEmision||'').localeCompare(String(a.fechaEmision||''));
+        });
+        poblarFiltroCliente();
+        aplicarFiltros();
+        calcularKPIs();
+    },function(err){
+        toast('Error cargando datos: '+err.message,'err');
+    });
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function fmt(n){return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(v){return v!=null&&v!==''&&v!=='-'?String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;'):'—';}
+function fmtF(v){
+    if(!v||v==='-'||v==='—') return '—';
+    var s=String(v).trim();
+    if(s.match(/^\d{4}-\d{2}-\d{2}/)){var p=s.substring(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+    return s;
+}
+function toast(msg,tipo){
+    var t=document.getElementById('toast');
+    t.textContent=msg;t.className='toast '+(tipo||'ok');t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────
+function calcularKPIs(){
+    var totalDescuento=0, totalNeto=0, conPDF=0;
+    datos.forEach(function(r){
+        var descuento=parseFloat(r.ncImporte)||0;
+        var total=parseFloat(r.total)||0;
+        totalDescuento+=descuento;
+        totalNeto+=(total-descuento);
+        if(r.bancoPDFLink&&r.bancoPDFLink!=='-') conPDF++;
+    });
+    document.getElementById('kCount').textContent=datos.length;
+    document.getElementById('kDescuento').textContent='S/ '+fmt(totalDescuento);
+    document.getElementById('kNeto').textContent='S/ '+fmt(totalNeto);
+    document.getElementById('kConPDF').textContent=conPDF;
+}
+
+// ── POBLAR FILTRO CLIENTE ─────────────────────────────────────
+function poblarFiltroCliente(){
+    var clientes=[...new Set(datos.map(function(r){return r.cliente||r.razonSocial||'';}).filter(Boolean))].sort();
+    var sel=document.getElementById('filterCliente');
+    var cur=sel.value;
+    sel.innerHTML='<option value="">Todos los clientes</option>';
+    clientes.forEach(function(c){var op=document.createElement('option');op.value=c;op.textContent=c;sel.appendChild(op);});
+    if(cur) sel.value=cur;
+}
+
+// ── FILTROS ───────────────────────────────────────────────────
+function aplicarFiltros(){
+    var q   =document.getElementById('searchInput').value.toLowerCase().trim();
+    var cli =document.getElementById('filterCliente').value;
+    var pdf =document.getElementById('filterPDF').value;
+
+    datosFiltrados=datos.filter(function(r){
+        var factNum=(r.serie||'')+'-'+(r.numFact||'');
+        var mQ=!q||[factNum,r.cliente,r.razonSocial,r.ruc,r.ncNumero,r.ref].some(function(v){return String(v||'').toLowerCase().includes(q);});
+        var mC=!cli||(r.cliente||r.razonSocial||'')=== cli;
+        var tienePDF=r.bancoPDFLink&&r.bancoPDFLink!=='-';
+        var mP=!pdf||(pdf==='con'?tienePDF:!tienePDF);
+        return mQ&&mC&&mP;
+    });
+
+    document.getElementById('tableCount').textContent=datosFiltrados.length+' registro'+(datosFiltrados.length!==1?'s':'');
+    renderTabla();
+}
+window.aplicarFiltros=aplicarFiltros;
+
+// ── RENDER TABLA ──────────────────────────────────────────────
+function renderTabla(){
+    var tbody=document.getElementById('tablaBody');
+    var empty=document.getElementById('emptyState');
+    tbody.innerHTML='';
+    if(!datosFiltrados.length){empty.style.display='flex';return;}
+    empty.style.display='none';
+
+    datosFiltrados.forEach(function(row){
+        var factNum=(row.serie||'')+(row.serie&&row.numFact?'-':'')+(row.numFact||'');
+        var descuento=parseFloat(row.ncImporte)||0;
+        var total=parseFloat(row.total)||0;
+        var neto=total-descuento;
+        var tienePDF=row.bancoPDFLink&&row.bancoPDFLink!=='-';
+
+        var tr=document.createElement('tr');
+        tr.innerHTML=
+          '<td style="font-weight:800;color:var(--azul)">'+esc(factNum)+'</td>'+
+          '<td>'+fmtF(row.fechaEmision)+'</td>'+
+          '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">'+esc(row.cliente||row.razonSocial)+'</td>'+
+          '<td style="font-family:monospace;font-size:.72rem">'+esc(row.ruc)+'</td>'+
+          '<td style="font-weight:700;color:var(--azul2)">S/ '+fmt(total)+'</td>'+
+          '<td style="font-size:.73rem;font-weight:700;color:var(--morado)">'+esc(row.ncNumero)+'</td>'+
+          '<td style="font-weight:700;color:var(--rojo)">− S/ '+fmt(descuento)+'</td>'+
+          '<td style="font-weight:800;color:var(--verde)">S/ '+fmt(neto)+'</td>'+
+          '<td>'+
+            (row.factLink&&row.factLink!=='-'?
+              '<a href="'+row.factLink+'" target="_blank" rel="noopener" class="doc-link">'+esc(row.factNombre||'Ver PDF')+'</a>':
+              '<span style="color:#94a3b8;font-size:.72rem">—</span>')+
+          '</td>'+
+          '<td>'+
+            (tienePDF?
+              '<a href="'+row.bancoPDFLink+'" target="_blank" rel="noopener" class="doc-link" style="color:var(--verde)">'+
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>'+
+                esc(row.bancoPDFNombre||'Ver PDF')+'</a>':
+              '<span style="font-size:.68rem;color:#94a3b8;font-style:italic">Sin subir</span>')+
+          '</td>'+
+          '<td>'+
+            '<button onclick="abrirModal(\''+row._id+'\')" style="'+
+              'display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid '+(tienePDF?'var(--verde)':'var(--naranja)')+';'+
+              'background:'+(tienePDF?'#f0fdf4':'#fff7ed')+';color:'+(tienePDF?'var(--verde)':'var(--naranja)')+';'+
+              'font-family:inherit;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s">'+
+              (tienePDF?'✏️ Reemplazar':'📤 Subir PDF')+
+            '</button>'+
+          '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+// ── MODAL UPLOAD ──────────────────────────────────────────────
+function abrirModal(id){
+    editId=id;
+    uploadData={nombre:null,url:null};
+    resetUploadUI();
+    var row=datos.find(function(r){return r._id===id;});
+    if(!row) return;
+    var factNum=(row.serie||'')+'-'+(row.numFact||'');
+    var descuento=parseFloat(row.ncImporte)||0;
+    var total=parseFloat(row.total)||0;
+    document.getElementById('detFactura').textContent=factNum;
+    document.getElementById('detCliente').textContent=row.cliente||row.razonSocial||'—';
+    document.getElementById('detTotal').textContent='S/ '+fmt(total);
+    document.getElementById('detNC').textContent=row.ncNumero||'—';
+    document.getElementById('detDescuento').textContent='− S/ '+fmt(descuento);
+    document.getElementById('detNeto').textContent='S/ '+fmt(total-descuento);
+    document.getElementById('fReferencia').value=row.bancoPDFRef||'';
+    // Si ya tiene PDF, mostrarlo
+    if(row.bancoPDFLink&&row.bancoPDFLink!=='-'){
+        uploadData={nombre:row.bancoPDFNombre,url:row.bancoPDFLink};
+        document.getElementById('uploadDoneName').textContent=row.bancoPDFNombre||'PDF banco';
+        document.getElementById('uploadDone').style.display='flex';
+    }
+    document.getElementById('overlay').classList.add('open');
+}
+window.abrirModal=abrirModal;
+
+function cerrarModal(){document.getElementById('overlay').classList.remove('open'); editId=null;}
+window.cerrarModal=cerrarModal;
+
+function resetUploadUI(){
+    document.getElementById('uploadProg').style.display='none';
+    document.getElementById('uploadProgFill').style.width='0%';
+    document.getElementById('uploadStatus').style.display='none';
+    document.getElementById('uploadStatus').textContent='';
+    document.getElementById('uploadDone').style.display='none';
+    document.getElementById('uploadDoneName').textContent='';
+    uploadData={nombre:null,url:null};
+    var inp=document.getElementById('uploadArea').querySelector('input[type=file]');
+    if(inp) inp.value='';
+}
+
+// ── UPLOAD PDF ────────────────────────────────────────────────
+function handleUpload(event){
+    var file=event.target.files[0]; if(!file) return;
+    if(file.type!=='application/pdf'){toast('Solo se aceptan archivos PDF','err');return;}
+    var path='factoring/'+Date.now()+'_'+file.name.replace(/\s/g,'_');
+    var storRef=sRef(storage,path);
+    var prog=document.getElementById('uploadProg');
+    var fill=document.getElementById('uploadProgFill');
+    var status=document.getElementById('uploadStatus');
+    prog.style.display='block';
+    status.style.display='block';
+    status.style.color='var(--azul2)';
+    status.textContent='Subiendo...';
+    var task=uploadBytesResumable(storRef,file);
+    task.on('state_changed',
+        function(snap){fill.style.width=Math.round(snap.bytesTransferred/snap.totalBytes*100)+'%';},
+        function(err){status.style.color='var(--rojo)';status.textContent='Error: '+err.message;},
+        function(){
+            getDownloadURL(task.snapshot.ref).then(function(url){
+                uploadData={nombre:file.name,url:url};
+                status.style.color='var(--verde)';status.textContent='✓ Subido correctamente';
+                document.getElementById('uploadDone').style.display='flex';
+                document.getElementById('uploadDoneName').textContent=file.name;
+                toast('PDF subido correctamente ✓','ok');
+            });
+        }
+    );
+}
+window.handleUpload=handleUpload;
+
+function removeUpload(){
+    resetUploadUI();
+    uploadData={nombre:null,url:null};
+}
+window.removeUpload=removeUpload;
+
+// ── GUARDAR PDF EN FIRESTORE ──────────────────────────────────
+async function guardarPDF(){
+    if(!editId) return;
+    if(!uploadData.url){toast('Primero sube el PDF del banco','err');return;}
+    var btn=document.getElementById('btnGuardar');
+    var txt=document.getElementById('btnGuardarTxt');
+    btn.disabled=true; txt.innerHTML='<span class="spinner"></span>';
+    try{
+        await updateDoc(doc(db,'facturas',editId),{
+            bancoPDFNombre: uploadData.nombre,
+            bancoPDFLink:   uploadData.url,
+            bancoPDFRef:    document.getElementById('fReferencia').value.trim()||'-',
+            updatedAt: serverTimestamp()
+        });
+        toast('PDF guardado correctamente ✓','ok');
+        btn.disabled=false; txt.textContent='GUARDAR';
+        cerrarModal();
+    }catch(err){
+        btn.disabled=false; txt.textContent='GUARDAR';
+        toast('Error: '+err.message,'err');
+    }
+}
+window.guardarPDF=guardarPDF;
+
+// ── EXPORTAR EXCEL ────────────────────────────────────────────
+function exportarExcel(){
+    if(!datos.length){toast('No hay datos para exportar','warn');return;}
+    var rows=[['Factura','Fecha Emisión','Cliente','RUC','Total Factura','N° Nota Crédito','Descuento Factoring','Monto Neto','Con PDF Banco','Referencia PDF']];
+    datos.forEach(function(r){
+        var factNum=(r.serie||'')+'-'+(r.numFact||'');
+        var descuento=parseFloat(r.ncImporte)||0;
+        var total=parseFloat(r.total)||0;
+        rows.push([
+            factNum, r.fechaEmision,
+            r.cliente||r.razonSocial, r.ruc,
+            total, r.ncNumero, descuento, total-descuento,
+            (r.bancoPDFLink&&r.bancoPDFLink!=='-'?'Sí':'No'),
+            r.bancoPDFRef||'-'
+        ]);
+    });
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:14},{wch:13},{wch:22},{wch:14},{wch:14},{wch:16},{wch:18},{wch:14},{wch:12},{wch:25}];
+    XLSX.utils.book_append_sheet(wb,ws,'Factoring');
+    XLSX.writeFile(wb,'CARZE_Factoring.xlsx');
+    toast('Excel generado ✓','ok');
+}
+window.exportarExcel=exportarExcel;
+
+function cerrarSesion(){
+        signOut(auth).then(function(){
+            sessionStorage.clear();
+            window.location.replace('index.html');
+        }).catch(function(){
+            sessionStorage.clear();
+            window.location.replace('index.html');
+        });
+    }
+window.cerrarSesion=cerrarSesion;
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModal();});
+</script>
+</body>
+</html>
