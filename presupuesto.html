@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto | CARZE</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--morado:#9333ea;
+  --font:'Century Gothic','CenturyGothic',Verdana,sans-serif;
+  --pend-bg:#fffbeb;--pend-border:#fde68a;--pend-icon:#f59e0b;--pend-txt:#92400e;
+  --fact-bg:#f0fdf4;--fact-border:#bbf7d0;--fact-icon:#16a34a;--fact-txt:#14532d;
+  --obs-bg:#fff1f2;--obs-border:#fecdd3;--obs-icon:#dc2626;--obs-txt:#7f1d1d;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* MAIN */
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.fecha-badge{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--light);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px 26px}
+
+/* SECTION HEADER */
+.seccion{margin-bottom:26px}
+.seccion:last-child{margin-bottom:0}
+.seccion-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.seccion-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.seccion-icon.cot{background:rgba(30,64,175,.1)}
+.seccion-icon.cert{background:rgba(249,115,22,.1)}
+.seccion-titulo{font-family:var(--font);font-weight:800;font-size:1rem;color:var(--txt)}
+.seccion-sub{font-size:.72rem;color:var(--muted)}
+
+/* TABLE (mismo estilo que el resto de módulos) */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-hbar{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.table-hbar span{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--azul)}
+thead th{padding:9px 10px;text-align:left;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+thead th:first-child{padding-left:14px}
+thead th:last-child{padding-right:14px}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{filter:brightness(.97)}
+tbody td{padding:9px 10px;font-size:.74rem;color:var(--txt);white-space:nowrap}
+tbody td:first-child{padding-left:14px;font-weight:700;color:var(--azul)}
+tbody td:last-child{padding-right:14px}
+tbody tr.row-pendiente{background:#fffde7}
+tbody tr.row-facturado{background:#f0fdf4}
+tbody tr.row-observado{background:#fff1f2}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.pill.pendiente{background:var(--pend-bg);color:var(--pend-txt);border:1px solid var(--pend-border)}
+.pill.facturado{background:var(--fact-bg);color:var(--fact-txt);border:1px solid var(--fact-border)}
+.pill.observado{background:var(--obs-bg);color:var(--obs-txt);border:1px solid var(--obs-border)}
+.pill.pendiente .pill-dot{background:var(--pend-icon)}
+.pill.facturado .pill-dot{background:var(--fact-icon)}
+.pill.observado .pill-dot{background:var(--obs-icon)}
+
+.doc-link{color:var(--azul2);font-weight:600;text-decoration:underline;cursor:pointer;font-size:.72rem}
+.doc-link:hover{color:var(--naranja)}
+.muted-cell{color:#94a3b8}
+
+.badge-sinpresu{font-size:.6rem;font-weight:700;color:#94a3b8;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:3px 9px;text-transform:uppercase;letter-spacing:.04em}
+
+.btn-mini{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:var(--muted);font-family:inherit;font-size:.68rem;font-weight:700;cursor:not-allowed;opacity:.55}
+.btn-mini + .btn-mini{margin-left:6px}
+
+.empty-row td{text-align:center;padding:26px 10px;color:var(--muted);font-size:.78rem}
+
+/* ── ANIMACIONES ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.seccion{animation:fadeUp .4s ease both}
+.seccion:nth-child(2){animation-delay:.08s}
+</style>
+</head>
+<body>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Presupuesto</h1>
+      <p>Planificación de costos y rentabilidad · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="fecha-badge" id="fechaHoy">—</div>
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SECCIÓN COTIZACIONES -->
+    <div class="seccion">
+      <div class="seccion-head">
+        <div class="seccion-icon cot">📋</div>
+        <div>
+          <div class="seccion-titulo">Proyectos de Cotizaciones</div>
+          <div class="seccion-sub">Datos en vivo desde el módulo Cotizaciones</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-hbar">
+          <span>Registros</span>
+          <span id="countCot">Cargando…</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>N°</th><th>Cliente</th><th>Zona</th><th>Descripción</th>
+              <th>Cotización</th><th>Subtotal</th><th>Estado</th>
+              <th>Costos Totales</th><th>Rentabilidad</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tablaCot"><tr class="empty-row"><td colspan="10">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CERTIFICADOS -->
+    <div class="seccion">
+      <div class="seccion-head">
+        <div class="seccion-icon cert">🏅</div>
+        <div>
+          <div class="seccion-titulo">Proyectos de Certificados</div>
+          <div class="seccion-sub">Datos en vivo desde el módulo Certificados</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-hbar">
+          <span>Registros</span>
+          <span id="countCert">Cargando…</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>N°</th><th>Cliente</th><th>Zona</th><th>Descripción</th>
+              <th>Cotización</th><th>Subtotal</th><th>Estado</th>
+              <th>Costos Totales</th><th>Rentabilidad</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tablaCert"><tr class="empty-row"><td colspan="10">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+const firebaseConfig={
+    apiKey:"AIzaSyAk1FGQia36Y2G08L-_mscMv5JnozmPYa0",
+    authDomain:"gestioncarze.firebaseapp.com",
+    projectId:"gestioncarze",
+    storageBucket:"gestioncarze.firebasestorage.app",
+    messagingSenderId:"487407475826",
+    appId:"1:487407475826:web:32185a60f0123a5d25f6eb"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+// ── SESIÓN (igual que el resto de módulos) ──────────────────────
+onAuthStateChanged(auth, function(user){
+    if(!user){ window.location.replace('index.html'); return; }
+    if(!sessionStorage.getItem('carze_nombre') && user.email){
+        var nombres = {
+            'proyectos@carzesac.com': 'Jans Carrillo',
+            'logistica@carzesac.com': 'Edwduar Carrillo',
+            'informes@carzesac.com':  'Jhonny Carrillo',
+            'robertcz@carzesac.com':  'Robert Carrillo Zeña',
+        };
+        sessionStorage.setItem('carze_logged','true');
+        sessionStorage.setItem('carze_nombre', nombres[user.email]||user.email.split('@')[0]);
+        sessionStorage.setItem('carze_uid',    user.uid);
+        sessionStorage.setItem('carze_email',  user.email);
+    }
+});
+
+window.addEventListener('DOMContentLoaded',function(){
+    var n=sessionStorage.getItem('carze_nombre')||'Usuario';
+    document.getElementById('userName').textContent=n;
+    document.getElementById('avatarInitials').textContent=
+        n.split(' ').map(function(p){return p[0]||'';}).slice(0,2).join('').toUpperCase()||'U';
+    var hoyD=new Date();
+    function p2(v){return v<10?'0'+v:String(v);}
+    document.getElementById('fechaHoy').textContent=
+        p2(hoyD.getDate())+' '+['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][hoyD.getMonth()]+' '+hoyD.getFullYear();
+});
+
+function cerrarSesion(){
+    signOut(auth).then(function(){
+        sessionStorage.clear();
+        window.location.replace('index.html');
+    }).catch(function(){
+        sessionStorage.clear();
+        window.location.replace('index.html');
+    });
+}
+window.cerrarSesion=cerrarSesion;
+
+// ── HELPERS (mismos que usan los otros módulos) ──────────────────
+function esc(v){return(v!=null&&v!==''&&v!=='-'&&v!=='—')?String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'—';}
+function fmt(n){return parseFloat(n||0).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function docLink(nombre,link){
+    if(!nombre||nombre==='-'||nombre==='—') return '<span class="muted-cell">—</span>';
+    if(link&&link!=='-'&&link!=='—')
+        return '<a class="doc-link" href="'+String(link).replace(/"/g,'&quot;')+'" target="_blank" rel="noopener">'+String(nombre).replace(/</g,'&lt;')+'</a>';
+    return String(nombre).replace(/</g,'&lt;');
+}
+function pillEstado(e){
+    var k=(e||'').toLowerCase();
+    var c={pendiente:'pendiente',facturado:'facturado',observado:'observado'}[k]||'pendiente';
+    return '<span class="pill '+c+'"><span class="pill-dot"></span>'+esc(e)+'</span>';
+}
+
+// ── RENDER DE TABLA (reutilizable para cotizaciones y certificados) ──
+function renderTabla(tbodyId, countId, data){
+    var tbody=document.getElementById(tbodyId);
+    var countEl=document.getElementById(countId);
+    if(!data.length){
+        tbody.innerHTML='<tr class="empty-row"><td colspan="10">Sin proyectos activos por ahora.</td></tr>';
+        countEl.textContent='0 registros';
+        return;
+    }
+    countEl.textContent=data.length+' registro'+(data.length!==1?'s':'');
+    var html='';
+    data.forEach(function(row){
+        var est=(row.estado||'').toLowerCase();
+        var cls={pendiente:'row-pendiente',facturado:'row-facturado',observado:'row-observado'}[est]||'';
+        html+='<tr class="'+cls+'">'+
+            '<td>'+esc(row.num)+'</td>'+
+            '<td>'+esc(row.cliente)+'</td>'+
+            '<td>'+esc(row.zona)+'</td>'+
+            '<td style="white-space:normal;min-width:180px" title="'+(row.desc||'')+'">'+esc(row.desc)+'</td>'+
+            '<td>'+docLink(row.cotNombre,row.cotLink)+'</td>'+
+            '<td>S/ '+fmt(row.subtotal)+'</td>'+
+            '<td>'+pillEstado(row.estado)+'</td>'+
+            '<td><span class="badge-sinpresu">Sin iniciar</span></td>'+
+            '<td class="muted-cell">—</td>'+
+            '<td>'+
+                '<button class="btn-mini" title="Disponible en la siguiente parte" disabled>📊 Presupuesto</button>'+
+                '<button class="btn-mini" title="Disponible en la siguiente parte" disabled>📄 PDF</button>'+
+            '</td>'+
+        '</tr>';
+    });
+    tbody.innerHTML=html;
+}
+
+// ── ESCUCHAR EN VIVO cotizaciones y certificados (solo lectura) ──
+function escucharColeccion(nombreCol, tbodyId, countId){
+    var q=query(collection(db,nombreCol), orderBy('num','desc'));
+    onSnapshot(q, function(snap){
+        var data=[];
+        snap.forEach(function(d){
+            var r=d.data(); r._id=d.id;
+            if((r.estado||'').toLowerCase()==='anulado') return; // excluir anulados
+            data.push(r);
+        });
+        renderTabla(tbodyId, countId, data);
+    }, function(err){
+        console.error('Error leyendo '+nombreCol+':', err);
+        document.getElementById(tbodyId).innerHTML=
+            '<tr class="empty-row"><td colspan="10">No se pudo cargar la información. Intenta recargar la página.</td></tr>';
+    });
+}
+
+escucharColeccion('cotizaciones', 'tablaCot',  'countCot');
+escucharColeccion('certificados','tablaCert', 'countCert');
+</script>
+<script src="sidebar.js"></script>
+<script src="carzecito.js" defer></script>
+</body>
+</html>
