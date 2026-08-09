@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto | CARZE</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--morado:#9333ea;
+  --font:'Century Gothic','CenturyGothic',Verdana,sans-serif;
+  --pend-bg:#fffbeb;--pend-border:#fde68a;--pend-icon:#f59e0b;--pend-txt:#92400e;
+  --fact-bg:#f0fdf4;--fact-border:#bbf7d0;--fact-icon:#16a34a;--fact-txt:#14532d;
+  --obs-bg:#fff1f2;--obs-border:#fecdd3;--obs-icon:#dc2626;--obs-txt:#7f1d1d;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--txt);overflow:hidden}
+
+/* MAIN */
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:var(--font);font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.fecha-badge{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--light);border:1px solid var(--border);border-radius:8px;padding:6px 12px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px 26px}
+
+/* SECTION HEADER */
+.seccion{margin-bottom:26px}
+.seccion:last-child{margin-bottom:0}
+.seccion-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.seccion-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.seccion-icon.cot{background:rgba(30,64,175,.1)}
+.seccion-icon.cert{background:rgba(249,115,22,.1)}
+.seccion-titulo{font-family:var(--font);font-weight:800;font-size:1rem;color:var(--txt)}
+.seccion-sub{font-size:.72rem;color:var(--muted)}
+
+/* TABLE */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-hbar{padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.table-hbar span{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--azul)}
+thead th{padding:9px 10px;text-align:left;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+thead th:first-child{padding-left:14px}
+thead th:last-child{padding-right:14px}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{filter:brightness(.97)}
+tbody td{padding:9px 10px;font-size:.74rem;color:var(--txt);white-space:nowrap}
+tbody td:first-child{padding-left:14px;font-weight:700;color:var(--azul)}
+tbody td:last-child{padding-right:14px}
+tbody tr.row-pendiente{background:#fffde7}
+tbody tr.row-observado{background:#fff1f2}
+tbody tr.row-finalizado{background:#fee2e2}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.pill.pendiente{background:var(--pend-bg);color:var(--pend-txt);border:1px solid var(--pend-border)}
+.pill.observado{background:var(--obs-bg);color:var(--obs-txt);border:1px solid var(--obs-border)}
+.pill.pendiente .pill-dot{background:var(--pend-icon)}
+.pill.observado .pill-dot{background:var(--obs-icon)}
+
+.doc-link{color:var(--azul2);font-weight:600;text-decoration:underline;cursor:pointer;font-size:.72rem}
+.doc-link:hover{color:var(--naranja)}
+.muted-cell{color:#94a3b8}
+
+.pct{font-weight:800}
+.pct.pos{color:var(--verde)}
+.pct.neg{color:var(--rojo)}
+
+.btn-mini{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:var(--muted);font-family:inherit;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-mini + .btn-mini{margin-left:6px}
+.btn-mini.activo{border-color:var(--azul2);color:var(--azul2)}
+.btn-mini.activo:hover{background:var(--azul2);color:#fff}
+.btn-mini.proceso{border-color:var(--amarillo);color:#92400e}
+.btn-mini.proceso:hover{background:var(--amarillo);color:#fff}
+.btn-mini.final{border-color:var(--verde);color:var(--verde)}
+.btn-mini.final:hover{background:var(--verde);color:#fff}
+.btn-mini[disabled]{cursor:not-allowed;opacity:.5}
+.btn-mini[disabled]:hover{background:var(--white);color:var(--muted)}
+
+.empty-row td{text-align:center;padding:26px 10px;color:var(--muted);font-size:.78rem}
+
+/* ── MODAL PRESUPUESTO ── */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:18px;width:92%;max-width:760px;max-height:92vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.22);transform:translateY(24px) scale(.98);transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;position:relative}
+.overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 16px;border-bottom:1px solid var(--border)}
+.modal-head h2{font-family:var(--font);font-size:1.05rem;font-weight:800;color:var(--azul)}
+.modal-head p{font-size:.72rem;color:var(--muted);margin-top:2px}
+.modal-close{width:34px;height:34px;background:var(--light);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all .2s;flex-shrink:0}
+.modal-close:hover{background:#fee2e2;color:var(--rojo)}
+.modal-body{padding:20px 26px}
+.modal-foot{padding:16px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+.frow label{display:block;font-size:.7rem;font-weight:700;color:var(--txt);margin-bottom:5px}
+.finput{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;color:var(--txt);background:#fff}
+.finput:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.finput.finput-auto{background:var(--light);color:var(--muted);cursor:default}
+.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{background:var(--azul2)}
+.btn-ghost{background:var(--light);color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{background:#eef1f5}
+.btn-add-cat{background:none;border:1.5px dashed var(--border);color:var(--muted);width:100%;justify-content:center;padding:10px;border-radius:10px;margin-bottom:16px}
+.btn-add-cat:hover{border-color:var(--naranja);color:var(--naranja)}
+
+.cat-block{border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:12px;background:var(--light)}
+.cat-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cat-name{flex:1;border:none;background:transparent;font-weight:800;font-size:.82rem;color:var(--azul);padding:4px 6px;border-radius:6px;font-family:inherit}
+.cat-name:focus{outline:none;background:#fff;box-shadow:0 0 0 2px rgba(249,115,22,.15)}
+.cat-subtotal{font-size:.8rem;font-weight:800;color:var(--verde);white-space:nowrap}
+.cat-del{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.45;transition:opacity .15s;flex-shrink:0}
+.cat-del:hover{opacity:1}
+.cat-lineas{display:flex;flex-direction:column;gap:7px;margin-bottom:9px}
+.linea-row{display:flex;gap:8px;align-items:center}
+.linea-concepto{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.75rem;font-family:inherit;background:#fff}
+.linea-monto{width:120px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.75rem;font-family:inherit;text-align:right;background:#fff}
+.linea-concepto:focus,.linea-monto:focus{outline:none;border-color:var(--naranja)}
+.linea-del{background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:.85rem;padding:2px 5px;flex-shrink:0}
+.linea-del:hover{color:var(--rojo)}
+.cat-add-linea{background:none;border:1px dashed #cbd5e1;border-radius:7px;padding:5px 12px;font-size:.68rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.cat-add-linea:hover{border-color:var(--naranja);color:var(--naranja)}
+
+.resumen-presu{margin-top:6px;padding:15px 16px;background:linear-gradient(135deg,rgba(30,64,175,.06),rgba(249,115,22,.06));border:1px solid var(--border);border-radius:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.resumen-item{text-align:center}
+.resumen-label{font-size:.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.resumen-valor{font-size:1rem;font-weight:800;color:var(--txt)}
+.resumen-valor.pos{color:var(--verde)}
+.resumen-valor.neg{color:var(--rojo)}
+.resumen-nota{grid-column:1/-1;font-size:.68rem;color:var(--muted);text-align:center;margin-top:4px}
+
+/* ── ANIMACIONES ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.seccion{animation:fadeUp .4s ease both}
+.seccion:nth-child(2){animation-delay:.08s}
+</style>
+</head>
+<body>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Presupuesto</h1>
+      <p>Planificación de costos y rentabilidad · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="fecha-badge" id="fechaHoy">—</div>
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SECCIÓN COTIZACIONES -->
+    <div class="seccion">
+      <div class="seccion-head">
+        <div class="seccion-icon cot">📋</div>
+        <div>
+          <div class="seccion-titulo">Proyectos de Cotizaciones</div>
+          <div class="seccion-sub">Pendientes y observados · datos en vivo desde el módulo Cotizaciones</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-hbar">
+          <span>Registros</span>
+          <span id="countCot">Cargando…</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>N°</th><th>Cliente</th><th>Zona</th><th>Descripción</th>
+              <th>Cotización</th><th>Subtotal</th><th>Estado</th>
+              <th>Costos Totales</th><th>Rentabilidad</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tablaCot"><tr class="empty-row"><td colspan="10">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CERTIFICADOS -->
+    <div class="seccion">
+      <div class="seccion-head">
+        <div class="seccion-icon cert">🏅</div>
+        <div>
+          <div class="seccion-titulo">Proyectos de Certificados</div>
+          <div class="seccion-sub">Pendientes y observados · datos en vivo desde el módulo Certificados</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-hbar">
+          <span>Registros</span>
+          <span id="countCert">Cargando…</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>N°</th><th>Cliente</th><th>Zona</th><th>Descripción</th>
+              <th>Cotización</th><th>Subtotal</th><th>Estado</th>
+              <th>Costos Totales</th><th>Rentabilidad</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tablaCert"><tr class="empty-row"><td colspan="10">Cargando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRESUPUESTO -->
+<div class="overlay" id="overlayPresu" onclick="overlayClickPresu(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalPresuTitulo">Presupuesto del proyecto</h2>
+        <p id="modalPresuSub">—</p>
+      </div>
+      <div class="modal-close" onclick="cerrarModalPresupuesto()">✕</div>
+    </div>
+    <div class="modal-body">
+
+      <div class="fgrid3">
+        <div class="frow">
+          <label>Fecha de Inicio <span style="color:var(--naranja)">*</span></label>
+          <input class="finput" id="presuFechaInicio" type="date" oninput="recalcularPresupuesto()">
+        </div>
+        <div class="frow">
+          <label>Fecha de Fin</label>
+          <input class="finput" id="presuFechaFin" type="date" oninput="recalcularPresupuesto()">
+        </div>
+        <div class="frow">
+          <label>Duración estimada (días) <span id="duracionAutoTag" style="color:var(--azul2);font-weight:600;display:none">· auto-calculada</span></label>
+          <input class="finput" id="presuDuracionEst" type="number" min="0" placeholder="Opcional" oninput="recalcularPresupuesto()">
+        </div>
+      </div>
+
+      <div id="categoriasContainer"></div>
+
+      <button class="btn-add-cat" onclick="agregarCategoria()">+ Agregar categoría de costo</button>
+
+      <div class="resumen-presu" id="resumenPresu"></div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrarModalPresupuesto()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarPresu" onclick="guardarPresupuesto()">Guardar Presupuesto</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="presupuesto.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="carzecito-bridge.js"></script>
+<script src="carzecito.js" defer></script>
+</body>
+</html>
