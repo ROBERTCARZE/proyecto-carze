@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vencimientos y Alertas | CARZE</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sw:220px;--bg:#f0f2f5;--white:#fff;--naranja:#f97316;--naranja2:#ea580c;
+  --azul:#1a3a6b;--azul2:#1e40af;--border:#e4e8ef;--txt:#1e293b;--muted:#64748b;--light:#f8fafc;
+  --verde:#16a34a;--rojo:#dc2626;--amarillo:#f59e0b;--morado:#9333ea;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--naranja)}
+.topbar-left p{font-size:.7rem;color:var(--muted);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:50px;padding:6px 14px 6px 8px}
+.user-avatar{width:28px;height:28px;background:linear-gradient(135deg,var(--naranja),var(--naranja2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff}
+.user-name{font-size:.75rem;font-weight:700;color:var(--txt)}
+.btn-logout{display:flex;align-items:center;gap:7px;padding:7px 15px;border:1.5px solid #fecaca;border-radius:9px;background:transparent;color:#dc2626;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-logout:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+.content{flex:1;overflow-y:auto;padding:22px 28px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* RESUMEN SEMÁFORO */
+.semaforo-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sem-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;animation:fadeUp .4s ease both;cursor:default;transition:transform .18s,box-shadow .18s}
+.sem-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.sem-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:14px 14px 0 0}
+.sem-card.urgente::before{background:linear-gradient(90deg,#dc2626,#f87171)}
+.sem-card.proximo::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.sem-card.ok::before{background:linear-gradient(90deg,#16a34a,#86efac)}
+.sem-card.info::before{background:linear-gradient(90deg,#1e40af,#818cf8)}
+.sem-icon{font-size:1.8rem;margin-bottom:8px}
+.sem-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.sem-count{font-family:'Century Gothic','CenturyGothic',Verdana,sans-serif;font-size:2rem;font-weight:800;margin-bottom:2px}
+.sem-card.urgente .sem-count{color:var(--rojo)}
+.sem-card.proximo .sem-count{color:var(--amarillo)}
+.sem-card.ok     .sem-count{color:var(--verde)}
+.sem-card.info   .sem-count{color:var(--azul2)}
+.sem-sub{font-size:.68rem;color:var(--muted)}
+.sem-card:nth-child(1){animation-delay:.05s}.sem-card:nth-child(2){animation-delay:.1s}
+.sem-card:nth-child(3){animation-delay:.15s}.sem-card:nth-child(4){animation-delay:.2s}
+
+/* UMBRAL CAJA */
+.umbral-bar{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;animation:fadeUp .4s ease .25s both}
+.umbral-label{font-size:.75rem;font-weight:700;color:var(--txt)}
+.umbral-input{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.8rem;font-family:inherit;color:var(--txt);width:120px;transition:all .2s}
+.umbral-input:focus{outline:none;border-color:var(--naranja);box-shadow:0 0 0 3px rgba(249,115,22,.08)}
+.umbral-btn{padding:7px 16px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .2s}
+.umbral-btn:hover{background:var(--azul2)}
+.umbral-saldo{font-size:.8rem;font-weight:700;padding:7px 14px;border-radius:8px}
+
+/* SECCIONES */
+.seccion{margin-bottom:28px;animation:fadeUp .4s ease both}
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sec-icon{font-size:1.2rem}
+.sec-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--azul)}
+.sec-title span{color:var(--naranja)}
+.sec-badge{font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-urgente{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.badge-proximo{background:#fef9c3;color:#a16207;border:1px solid #fde68a}
+.badge-ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+
+/* ALERT CARDS */
+.alert-grid{display:flex;flex-direction:column;gap:10px}
+.alert-card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:16px;transition:box-shadow .18s,border-color .18s}
+.alert-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07)}
+.alert-card.nivel-urgente{border-left:4px solid var(--rojo)}
+.alert-card.nivel-proximo{border-left:4px solid var(--amarillo)}
+.alert-card.nivel-ok{border-left:4px solid var(--verde)}
+.alert-card.nivel-info{border-left:4px solid var(--azul2)}
+.alert-pill{font-size:.6rem;font-weight:800;padding:3px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.pill-urgente{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.pill-proximo{background:#fef9c3;color:#a16207;border:1px solid #fde68a}
+.pill-ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.pill-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.alert-content{flex:1;min-width:0}
+.alert-title{font-size:.82rem;font-weight:700;color:var(--txt);margin-bottom:2px}
+.alert-sub{font-size:.72rem;color:var(--muted)}
+.alert-right{text-align:right;flex-shrink:0}
+.alert-monto{font-family:'Century Gothic','CenturyGothic',Verdana,sans-serif;font-size:.92rem;font-weight:800;color:var(--txt)}
+.alert-fecha{font-size:.66rem;color:var(--muted);margin-top:2px}
+.empty-sec{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:.78rem;display:flex;align-items:center;justify-content:center;gap:8px}
+
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:.82rem;font-weight:700;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#16a34a}.toast.err{background:#dc2626}.toast.warn{background:#f59e0b}
+.mascota{position:fixed;bottom:0;left:calc(var(--sw)+12px);width:86px;pointer-events:none;z-index:10;opacity:.82}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PESTAÑAS ── */
+.tabs-row{display:flex;gap:10px;margin-bottom:20px}
+.tab-btn{display:flex;align-items:center;gap:7px;padding:9px 20px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s}
+.tab-btn:hover{border-color:var(--naranja);color:var(--naranja)}
+.tab-btn.active{background:var(--azul);border-color:var(--azul);color:#fff}
+.tab-btn .tab-count{background:rgba(255,255,255,.2);border-radius:20px;padding:1px 8px;font-size:.68rem}
+.tab-btn:not(.active) .tab-count{background:var(--light);color:var(--muted)}
+
+/* ── COMPROMISOS ── */
+.btn-nuevo-compromiso{margin-left:auto;padding:8px 16px;background:var(--azul);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-nuevo-compromiso:hover{background:var(--azul2)}
+.table-wrap-comp{background:var(--white);border:1.5px solid var(--border);border-radius:14px;overflow:hidden}
+.table-wrap-comp table{width:100%;border-collapse:collapse}
+.table-wrap-comp thead tr{background:var(--azul)}
+.table-wrap-comp thead th{padding:10px 14px;text-align:left;font-size:.65rem;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.table-wrap-comp tbody tr{border-bottom:1px solid var(--border)}
+.table-wrap-comp tbody tr:last-child{border-bottom:none}
+.table-wrap-comp tbody tr.inactivo{opacity:.5}
+.table-wrap-comp tbody td{padding:10px 14px;font-size:.78rem;color:var(--txt)}
+.cat-chip{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.dur-chip{font-size:.68rem;font-weight:600;color:var(--muted);background:var(--light);border:1px solid var(--border);border-radius:20px;padding:3px 9px;white-space:nowrap}
+.estado-chip{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.estado-chip.activo{background:#dcfce7;color:#15803d}
+.estado-chip.inactivo{background:#f1f5f9;color:#94a3b8}
+.btn-accion-comp{background:transparent;border:1px solid var(--border);border-radius:7px;padding:4px 8px;cursor:pointer;font-size:.72rem;margin-right:4px;transition:all .18s}
+.btn-accion-comp:hover{background:var(--light)}
+
+/* ── MODAL COMPROMISO ── */
+.overlay-comp{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay-comp.open{opacity:1;pointer-events:all}
+.modal-comp{background:#fff;border-radius:18px;width:92%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+.modal-comp-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;border-bottom:1px solid var(--border)}
+.modal-comp-head h2{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--azul)}
+.modal-comp-close{width:32px;height:32px;background:var(--light);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted)}
+.modal-comp-body{padding:18px 24px}
+.mc-frow{margin-bottom:14px}
+.mc-frow label{display:block;font-size:.7rem;font-weight:700;color:var(--txt);margin-bottom:5px}
+.mc-input,.mc-select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:.82rem;font-family:inherit;color:var(--txt);background:#fff}
+.mc-input:focus,.mc-select:focus{outline:none;border-color:var(--naranja)}
+.mc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-comp-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.btn-comp-primary{padding:9px 20px;background:var(--azul);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+.btn-comp-primary:hover{background:var(--azul2)}
+.btn-comp-ghost{padding:9px 20px;background:var(--light);color:var(--muted);border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+
+/* ── PRESUPUESTO MENSUAL ── */
+.mes-selector{margin-left:auto;padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--txt);background:#fff}
+.presu-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.presu-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px 18px}
+.presu-card.disponible{border-top:3px solid #16a34a}
+.presu-card.obligaciones{border-top:3px solid #dc2626}
+.presu-card-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:var(--txt);margin-bottom:12px}
+.presu-linea{display:flex;justify-content:space-between;align-items:center;font-size:.76rem;color:var(--muted);padding:7px 0;border-bottom:1px dashed var(--border)}
+.presu-linea b{color:var(--txt);font-weight:700}
+.presu-linea.total{border-bottom:none;border-top:1.5px solid var(--border);margin-top:4px;padding-top:10px}
+.presu-linea.total span{font-weight:700;color:var(--txt);font-size:.8rem}
+.presu-linea.total b{font-size:.95rem}
+.presu-card.disponible .presu-linea.total b{color:#16a34a}
+.presu-card.obligaciones .presu-linea.total b{color:#dc2626}
+
+.presu-resultado{border-radius:16px;padding:22px;text-align:center;margin-bottom:18px;transition:background .3s}
+.presu-resultado-label{font-size:.8rem;font-weight:700;margin-bottom:6px}
+.presu-resultado-monto{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800}
+.presu-resultado.cubierto{background:#f0fdf4}
+.presu-resultado.cubierto .presu-resultado-label{color:#15803d}
+.presu-resultado.cubierto .presu-resultado-monto{color:#16a34a}
+.presu-resultado.ajustado{background:#fffbeb}
+.presu-resultado.ajustado .presu-resultado-label{color:#92400e}
+.presu-resultado.ajustado .presu-resultado-monto{color:#d97706}
+.presu-resultado.falta{background:#fef2f2}
+.presu-resultado.falta .presu-resultado-label{color:#991b1b}
+.presu-resultado.falta .presu-resultado-monto{color:#dc2626}
+
+.presu-detalle{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.presu-detalle-col{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px}
+.presu-detalle-titulo{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.pm-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.76rem}
+.pm-item:last-child{border-bottom:none}
+.pm-item-nombre{flex:1;color:var(--txt);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-item-monto{font-weight:700;color:var(--txt);white-space:nowrap}
+.pm-ajuste-input{width:90px;padding:4px 7px;border:1.5px solid var(--border);border-radius:7px;font-size:.74rem;font-family:inherit;text-align:right}
+.pm-ajuste-input:focus{outline:none;border-color:var(--naranja)}
+.pm-empty{color:#94a3b8;font-size:.76rem;text-align:center;padding:10px 0}
+</style>
+</head>
+<body>
+
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Vencimientos y Alertas</h1>
+      <p>Monitor automático · CARZE Contratistas Generales S.A.C.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="avatarInitials">?</div>
+        <span class="user-name" id="userName">Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="cerrarSesion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- BARRA DE PESTAÑAS -->
+    <div class="tabs-row">
+      <button class="tab-btn active" id="tabAlertas" onclick="cambiarTabVenc('alertas')">
+        🚨 Alertas
+      </button>
+      <button class="tab-btn" id="tabCompromisos" onclick="cambiarTabVenc('compromisos')">
+        💰 Compromisos <span class="tab-count" id="cntCompromisos">0</span>
+      </button>
+    </div>
+
+    <!-- VISTA: ALERTAS (todo lo que ya existía) -->
+    <div id="vistaAlertas">
+
+    <!-- SEMÁFORO RESUMEN -->
+    <div class="semaforo-row">
+      <div class="sem-card urgente">
+        <div class="sem-icon">🔴</div>
+        <div class="sem-label">Alertas Urgentes</div>
+        <div class="sem-count" id="semUrgente">0</div>
+        <div class="sem-sub">Atención inmediata</div>
+      </div>
+      <div class="sem-card proximo">
+        <div class="sem-icon">🟡</div>
+        <div class="sem-label">Próximos a Vencer</div>
+        <div class="sem-count" id="semProximo">0</div>
+        <div class="sem-sub">En los próximos 15 días</div>
+      </div>
+      <div class="sem-card ok">
+        <div class="sem-icon">🟢</div>
+        <div class="sem-label">Al Día</div>
+        <div class="sem-count" id="semOk">0</div>
+        <div class="sem-sub">Sin alertas activas</div>
+      </div>
+      <div class="sem-card info">
+        <div class="sem-icon">📋</div>
+        <div class="sem-label">Total Monitoreado</div>
+        <div class="sem-count" id="semTotal">0</div>
+        <div class="sem-sub">Items bajo vigilancia</div>
+      </div>
+    </div>
+
+    <!-- UMBRAL CAJA -->
+    <div class="umbral-bar">
+      <span class="umbral-label">💵 Umbral de alerta Caja:</span>
+      <span style="font-size:.75rem;color:var(--muted)">S/</span>
+      <input type="number" class="umbral-input" id="umbralCaja" value="500" min="0" onchange="procesarTodo()">
+      <button class="umbral-btn" onclick="procesarTodo()">Aplicar</button>
+      <div class="umbral-saldo" id="umbralSaldoInfo" style="background:var(--light);border:1px solid var(--border);color:var(--muted)">
+        Saldo actual: calculando...
+      </div>
+      <div style="flex:1"></div>
+      <span style="font-size:.7rem;color:var(--muted);font-style:italic">Actualización automática en tiempo real</span>
+    </div>
+
+    <!-- SECCIÓN 1: FACTURAS -->
+    <div class="seccion" style="animation-delay:.1s">
+      <div class="sec-head">
+        <span class="sec-icon">🧾</span>
+        <div class="sec-title">Facturas <span>Vencidas y por Vencer</span></div>
+        <span class="sec-badge" id="badgeFacturas">0</span>
+      </div>
+      <div class="alert-grid" id="alertasFacturas">
+        <div class="empty-sec">⏳ Cargando facturas...</div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: PRÉSTAMOS -->
+    <div class="seccion" style="animation-delay:.15s">
+      <div class="sec-head">
+        <span class="sec-icon">💳</span>
+        <div class="sec-title">Cuotas de <span>Préstamos</span></div>
+        <span class="sec-badge" id="badgePrestamos">0</span>
+      </div>
+      <div class="alert-grid" id="alertasPrestamos">
+        <div class="empty-sec">⏳ Cargando préstamos...</div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 3: IMPUESTOS -->
+    <div class="seccion" style="animation-delay:.2s">
+      <div class="sec-head">
+        <span class="sec-icon">🏛️</span>
+        <div class="sec-title">Declaraciones <span>SUNAT</span></div>
+        <span class="sec-badge" id="badgeImpuestos">0</span>
+      </div>
+      <div class="alert-grid" id="alertasImpuestos">
+        <div class="empty-sec">⏳ Cargando declaraciones...</div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 4: CAJA -->
+    <div class="seccion" style="animation-delay:.25s">
+      <div class="sec-head">
+        <span class="sec-icon">💵</span>
+        <div class="sec-title">Saldo de <span>Caja</span></div>
+        <span class="sec-badge" id="badgeCaja">—</span>
+      </div>
+      <div class="alert-grid" id="alertasCaja">
+        <div class="empty-sec">⏳ Cargando caja...</div>
+      </div>
+    </div>
+
+    </div>
+    <!-- fin vistaAlertas -->
+
+    <!-- VISTA: COMPROMISOS Y PRESUPUESTO -->
+    <div id="vistaCompromisos" style="display:none">
+
+      <div class="seccion">
+        <div class="sec-head">
+          <span class="sec-icon">📋</span>
+          <div class="sec-title">Registro de <span>Compromisos</span></div>
+          <button class="btn-nuevo-compromiso" onclick="abrirModalCompromiso()">+ Nuevo Compromiso</button>
+        </div>
+        <div class="table-wrap-comp">
+          <table>
+            <thead><tr>
+              <th>Concepto</th><th>Categoría</th><th>Monto Estimado</th>
+              <th>Día de Pago</th><th>Duración</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyCompromisos"></tbody>
+          </table>
+          <div class="empty-sec" id="emptyCompromisos" style="display:none">
+            📋 Aún no registraste ningún compromiso. Usa "+ Nuevo Compromiso" para el primero.
+          </div>
+        </div>
+      </div>
+
+      <div class="seccion" style="margin-top:22px">
+        <div class="sec-head">
+          <span class="sec-icon">🧮</span>
+          <div class="sec-title">Presupuesto <span>Mensual</span></div>
+          <input type="month" id="presuMesSel" class="mes-selector" onchange="renderPresupuestoMensual()">
+        </div>
+
+        <div class="presu-grid">
+          <div class="presu-card disponible">
+            <div class="presu-card-title">💰 Disponible</div>
+            <div class="presu-linea"><span>Saldo de Caja (cierre mes anterior)</span><b id="pmSaldoCaja">S/ 0.00</b></div>
+            <div class="presu-linea"><span>Facturas por Cobrar del mes</span><b id="pmFacturas">S/ 0.00</b></div>
+            <div class="presu-linea total"><span>Total Disponible</span><b id="pmTotalDisponible">S/ 0.00</b></div>
+          </div>
+          <div class="presu-card obligaciones">
+            <div class="presu-card-title">📌 Obligaciones</div>
+            <div class="presu-linea"><span>Compromisos del mes</span><b id="pmCompromisos">S/ 0.00</b></div>
+            <div class="presu-linea"><span>Cuotas de Préstamos del mes</span><b id="pmCuotas">S/ 0.00</b></div>
+            <div class="presu-linea total"><span>Total Obligaciones</span><b id="pmTotalObligaciones">S/ 0.00</b></div>
+          </div>
+        </div>
+
+        <div class="presu-resultado" id="pmResultadoCard">
+          <div class="presu-resultado-label" id="pmResultadoLabel">Calculando…</div>
+          <div class="presu-resultado-monto" id="pmResultadoMonto">S/ 0.00</div>
+        </div>
+
+        <div class="presu-detalle">
+          <div class="presu-detalle-col">
+            <div class="presu-detalle-titulo">Compromisos de este mes</div>
+            <div id="pmListaCompromisos"></div>
+          </div>
+          <div class="presu-detalle-col">
+            <div class="presu-detalle-titulo">Cuotas de préstamos de este mes</div>
+            <div id="pmListaCuotas"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- fin vistaCompromisos -->
+
+  </div>
+</div>
+
+<img src="img/mascota_carze.png" alt="" class="mascota" onerror="this.style.display='none'">
+<div class="toast" id="toast"></div>
+
+<!-- MODAL COMPROMISO -->
+<div class="overlay-comp" id="overlayComp" onclick="if(event.target===this)cerrarModalCompromiso()">
+  <div class="modal-comp">
+    <div class="modal-comp-head">
+      <h2 id="modalCompTitulo">Nuevo Compromiso</h2>
+      <div class="modal-comp-close" onclick="cerrarModalCompromiso()">✕</div>
+    </div>
+    <div class="modal-comp-body">
+      <div class="mc-frow">
+        <label>Concepto <span style="color:var(--naranja)">*</span></label>
+        <input class="mc-input" id="mcConcepto" placeholder="Ej: Planilla de personal, Luz - Enel, SCTR...">
+      </div>
+      <div class="mc-grid2">
+        <div class="mc-frow">
+          <label>Categoría</label>
+          <select class="mc-select" id="mcCategoria">
+            <option value="Personal">👥 Personal</option>
+            <option value="Servicios">💡 Servicios Básicos</option>
+            <option value="Seguros">🛡️ Seguros</option>
+            <option value="Alquileres">🏠 Alquileres</option>
+            <option value="Otros">📦 Otros</option>
+          </select>
+        </div>
+        <div class="mc-frow">
+          <label>Monto Estimado (S/) <span style="color:var(--naranja)">*</span></label>
+          <input class="mc-input" id="mcMonto" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+      </div>
+      <div class="mc-grid2">
+        <div class="mc-frow">
+          <label>Día de Pago del Mes <span style="color:var(--naranja)">*</span></label>
+          <input class="mc-input" id="mcDia" type="number" min="1" max="31" placeholder="Ej: 5">
+        </div>
+        <div class="mc-frow">
+          <label>Duración</label>
+          <select class="mc-select" id="mcDuracionTipo" onchange="toggleDuracionPlazo()">
+            <option value="indefinido">Indefinido (todos los meses)</option>
+            <option value="plazo">Plazo fijo (N meses)</option>
+          </select>
+        </div>
+      </div>
+      <div class="mc-grid2" id="mcPlazoWrap" style="display:none">
+        <div class="mc-frow">
+          <label>N° de Meses</label>
+          <input class="mc-input" id="mcPlazoMeses" type="number" min="1" placeholder="Ej: 3">
+        </div>
+        <div class="mc-frow">
+          <label>Mes de Inicio</label>
+          <input class="mc-input" id="mcPlazoInicio" type="month">
+        </div>
+      </div>
+    </div>
+    <div class="modal-comp-foot">
+      <button class="btn-comp-ghost" onclick="cerrarModalCompromiso()">Cancelar</button>
+      <button class="btn-comp-primary" id="btnGuardarComp" onclick="guardarCompromiso()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="vencimientos.js"></script>
+<script src="sidebar.js"></script>
+<script type="module" src="carzecito-bridge.js"></script>
+<script src="carzecito.js" defer></script>
+</body>
+</html>
