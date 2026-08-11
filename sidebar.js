@@ -68,6 +68,12 @@
         { href: 'vencimientos.html', label: 'Vencimiento y Alertas', icon: '🚨' },
         { href: 'seguimiento.html',  label: 'Seguimiento',           icon: '🔍' }
       ]
+    },
+    {
+      categoria: 'Sistema',
+      items: [
+        { href: 'respaldo.html', label: 'Respaldo de Datos', icon: '🗄️' }
+      ]
     }
   ];
 
