@@ -26,6 +26,7 @@ const storage = getStorage(app);
     const auth = getAuth(app);
 const COL = 'personal';
 const COL_SCTR = 'sctr';
+const COL_CUENTAS = 'cuentas_bancarias';
 
 if(window.pdfjsLib){
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -34,6 +35,31 @@ var sctrPreviewData=null, sctrArchivoFile=null, sctrHistorialData=[], sctrListen
 
 var datos=[], datosFiltrados=[], tipoActual='Planilla', editId=null;
 var sortCol=null, sortDir=1;
+
+var cuentasData=[], editCuentaId=null, pendingDelCuenta=null;
+
+// Entidades financieras autorizadas por la SBS (banca múltiple, financieras,
+// cajas municipales y cajas rurales) — referencial a 2026, verificar cambios
+// (fusiones/conversiones) en https://www.sbs.gob.pe
+var BANCOS_PERU=[
+    'Banco de Crédito del Perú (BCP)','BBVA Perú','Interbank','Scotiabank Perú',
+    'Mibanco','BanBif (Banco Interamericano de Finanzas)','Banco Pichincha',
+    'Banco Falabella','Banco Ripley','Compartamos Banco','Banco GNB Perú',
+    'Banco de Comercio','Alfin Banco','Citibank del Perú','Banco Santander Perú',
+    'Banco BCI Perú','ICBC Perú Bank','Bank of China (Perú)','Banco de la Nación',
+    'InFinance XP (antes Financiera Oh!)','Financiera Confianza','Financiera Efectiva',
+    'MAF Innovación Financiera (Mitsui Auto Finance)','Financiera Proempresa',
+    'Financiera Qapaq','Financiera Surgir',
+    'Caja Arequipa','Caja Huancayo','Caja Piura','Caja Cusco','Caja Trujillo',
+    'Caja Ica','Caja Tacna','Caja Maynas','Caja Paita','Caja Del Santa',
+    'Caja Metropolitana de Lima (CMCP)',
+    'Caja Los Andes','Caja Prymera','Caja Incasur','Caja Cencosud Scotia',
+    'Otro'
+];
+var BILLETERAS_PERU=[
+    'Yape (BCP)','Plin (Interbank / BBVA / Scotiabank)','IzipayYA (antes Tunki - Interbank)',
+    'Agora Pay','Sip (Intercorp)','Lukita','Ligo','Máximo','Prex Perú','Otro'
+];
 
 // ── SESIÓN ────────────────────────────────────────────────────
 // Verificar autenticación Firebase real
@@ -67,7 +93,18 @@ window.addEventListener('DOMContentLoaded',function(){
     cargarZonas();
     iniciarListener();
     iniciarListenerSCTR();
+    poblarSelectsCuentas();
+    iniciarListenerCuentas();
 });
+
+// ── TABS ─────────────────────────────────────────────────────
+function cambiarTab(tab){
+    document.getElementById('viewSCTR').style.display   = tab==='sctr'   ? '' : 'none';
+    document.getElementById('viewCuentas').style.display= tab==='cuentas'? '' : 'none';
+    document.getElementById('tabBtnSCTR').classList.toggle('active', tab==='sctr');
+    document.getElementById('tabBtnCuentas').classList.toggle('active', tab==='cuentas');
+}
+window.cambiarTab=cambiarTab;
 
 // ── ZONAS DESDE FIRESTORE ─────────────────────────────────────
 async function cargarZonas(){
@@ -88,6 +125,7 @@ function iniciarListener(){
         poblarFiltrosCargo();
         aplicarFiltros();
         calcularKPIs();
+        poblarDatalistNombres();
     },function(err){toast('Error: '+err.message,'err');});
 }
 
@@ -852,6 +890,208 @@ function exportarExcel(){
     toast('Excel generado ✓','ok');
 }
 window.exportarExcel=exportarExcel;
+
+// ══════════════════════════════════════════════════════════════
+// REGISTRO DE NÚMEROS DE CUENTA
+// ══════════════════════════════════════════════════════════════
+
+function poblarSelectsCuentas(){
+    var selE=document.getElementById('cEntidad');
+    var selB=document.getElementById('cBilletera');
+    if(selE){
+        BANCOS_PERU.forEach(function(b){
+            var op=document.createElement('option'); op.value=b; op.textContent=b; selE.appendChild(op);
+        });
+    }
+    if(selB){
+        BILLETERAS_PERU.forEach(function(b){
+            var op=document.createElement('option'); op.value=b; op.textContent=b; selB.appendChild(op);
+        });
+    }
+}
+
+// Sugerencias de nombres a partir del personal ya registrado (datalist, no obliga a elegir)
+function poblarDatalistNombres(){
+    var dl=document.getElementById('listaNombresPersonal');
+    if(!dl) return;
+    dl.innerHTML='';
+    datos.forEach(function(r){
+        var nombreCompleto=((r.apellido||'')+' '+(r.nombre||'')).trim();
+        if(!nombreCompleto) return;
+        var op=document.createElement('option'); op.value=nombreCompleto; dl.appendChild(op);
+    });
+}
+
+function toggleOtraEntidad(){
+    var v=document.getElementById('cEntidad').value;
+    document.getElementById('rowOtraEntidad').style.display = v==='Otro' ? '' : 'none';
+}
+window.toggleOtraEntidad=toggleOtraEntidad;
+
+function toggleOtraBilletera(){
+    var v=document.getElementById('cBilletera').value;
+    document.getElementById('rowOtraBilletera').style.display = v==='Otro' ? '' : 'none';
+}
+window.toggleOtraBilletera=toggleOtraBilletera;
+
+function iniciarListenerCuentas(){
+    onSnapshot(query(collection(db,COL_CUENTAS),orderBy('nombreCompleto','asc')),function(snap){
+        cuentasData=snap.docs.map(function(d){var r=d.data();r._id=d.id;return r;});
+        renderCuentas();
+    },function(err){
+        // Si las reglas de Firestore no incluyen esta colección, mostramos un aviso claro
+        // en vez de fallar en silencio.
+        if(document.getElementById('cuentasBody')){
+            toast('No se pudo cargar Cuentas Bancarias: '+err.message,'err');
+        }
+    });
+}
+
+function renderCuentas(){
+    var tbody=document.getElementById('cuentasBody');
+    if(!tbody) return;
+    var q=(document.getElementById('buscarCuenta').value||'').toLowerCase().trim();
+    var filtrado=cuentasData.filter(function(r){
+        if(!q) return true;
+        return [r.nombreCompleto,r.entidadFinanciera,r.numeroCuenta,r.cci,r.billeteraDigital,r.numero]
+            .some(function(v){return String(v||'').toLowerCase().includes(q);});
+    });
+    tbody.innerHTML='';
+    document.getElementById('cuentasCount').textContent=filtrado.length+' cuenta'+(filtrado.length!==1?'s':'');
+    document.getElementById('cuentasEmptyState').style.display=filtrado.length?'none':'flex';
+
+    filtrado.forEach(function(r,idx){
+        var tr=document.createElement('tr');
+        tr.innerHTML=
+          '<td>'+(idx+1)+'</td>'+
+          '<td style="font-weight:700;color:var(--txt)">'+esc(r.nombreCompleto)+'</td>'+
+          '<td>'+esc(r.entidadFinanciera)+'</td>'+
+          '<td style="font-family:monospace;letter-spacing:.03em">'+esc(r.numeroCuenta)+'</td>'+
+          '<td style="font-family:monospace;letter-spacing:.03em">'+esc(r.cci)+'</td>'+
+          '<td>'+esc(r.billeteraDigital)+'</td>'+
+          '<td>'+esc(r.numero)+'</td>'+
+          '<td style="display:flex;gap:5px">'+
+            '<button class="btn-edit-sm" onclick="editarCuenta(\''+r._id+'\')">✏️</button>'+
+            '<button class="btn-del" onclick="pedirEliminarCuenta(\''+r._id+'\',\''+esc(r.nombreCompleto).replace(/'/g,"\\'")+'\')">🗑️</button>'+
+          '</td>';
+        tbody.appendChild(tr);
+    });
+}
+window.renderCuentas=renderCuentas;
+
+function abrirModalCuenta(){
+    editCuentaId=null;
+    limpiarCuenta();
+    poblarDatalistNombres();
+    document.getElementById('modalCuentaTitle').innerHTML='Nueva <span>Cuenta Bancaria</span>';
+    document.getElementById('btnGuardarCuentaTxt').textContent='REGISTRAR';
+    document.getElementById('overlayCuenta').classList.add('open');
+}
+window.abrirModalCuenta=abrirModalCuenta;
+
+function editarCuenta(id){
+    var r=cuentasData.find(function(x){return x._id===id;}); if(!r) return;
+    editCuentaId=id;
+    limpiarCuenta();
+    poblarDatalistNombres();
+    document.getElementById('cNombre').value=r.nombreCompleto||'';
+    var esOtraEntidad = r.entidadFinanciera && BANCOS_PERU.indexOf(r.entidadFinanciera)===-1;
+    document.getElementById('cEntidad').value = esOtraEntidad ? 'Otro' : (r.entidadFinanciera||'');
+    document.getElementById('cEntidadOtro').value = esOtraEntidad ? r.entidadFinanciera : '';
+    toggleOtraEntidad();
+    document.getElementById('cNumeroCuenta').value=r.numeroCuenta||'';
+    document.getElementById('cCCI').value=r.cci||'';
+    var esOtraBilletera = r.billeteraDigital && BILLETERAS_PERU.indexOf(r.billeteraDigital)===-1;
+    document.getElementById('cBilletera').value = esOtraBilletera ? 'Otro' : (r.billeteraDigital||'');
+    document.getElementById('cBilleteraOtro').value = esOtraBilletera ? r.billeteraDigital : '';
+    toggleOtraBilletera();
+    document.getElementById('cNumero').value=r.numero||'';
+    document.getElementById('modalCuentaTitle').innerHTML='Editar <span>Cuenta Bancaria</span>';
+    document.getElementById('btnGuardarCuentaTxt').textContent='ACTUALIZAR';
+    document.getElementById('overlayCuenta').classList.add('open');
+}
+window.editarCuenta=editarCuenta;
+
+function cerrarModalCuenta(){document.getElementById('overlayCuenta').classList.remove('open');}
+window.cerrarModalCuenta=cerrarModalCuenta;
+
+function limpiarCuenta(){
+    ['cNombre','cEntidadOtro','cNumeroCuenta','cCCI','cBilleteraOtro','cNumero'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('cEntidad').value='';
+    document.getElementById('cBilletera').value='';
+    document.getElementById('rowOtraEntidad').style.display='none';
+    document.getElementById('rowOtraBilletera').style.display='none';
+}
+
+async function guardarCuenta(){
+    var nombreCompleto=document.getElementById('cNombre').value.trim();
+    if(!nombreCompleto){toast('Ingresa Apellidos y Nombres','err');return;}
+
+    var entidad=document.getElementById('cEntidad').value;
+    if(entidad==='Otro') entidad=document.getElementById('cEntidadOtro').value.trim();
+    var billetera=document.getElementById('cBilletera').value;
+    if(billetera==='Otro') billetera=document.getElementById('cBilleteraOtro').value.trim();
+
+    var btn=document.getElementById('btnGuardarCuenta');
+    var txt=document.getElementById('btnGuardarCuentaTxt');
+    btn.disabled=true; txt.innerHTML='<span class="spinner"></span>';
+
+    var docData={
+        nombreCompleto:nombreCompleto,
+        entidadFinanciera:entidad||'-',
+        numeroCuenta:document.getElementById('cNumeroCuenta').value.trim()||'-',
+        cci:document.getElementById('cCCI').value.trim()||'-',
+        billeteraDigital:billetera||'-',
+        numero:document.getElementById('cNumero').value.trim()||'-',
+        updatedAt:serverTimestamp()
+    };
+    try{
+        if(editCuentaId){
+            await updateDoc(doc(db,COL_CUENTAS,editCuentaId),docData);
+            toast('Cuenta actualizada ✓','ok');
+        }else{
+            docData.createdAt=serverTimestamp();
+            await addDoc(collection(db,COL_CUENTAS),docData);
+            toast('Cuenta registrada ✓','ok');
+        }
+        btn.disabled=false; txt.textContent=editCuentaId?'ACTUALIZAR':'REGISTRAR';
+        cerrarModalCuenta();
+    }catch(err){
+        btn.disabled=false; txt.textContent=editCuentaId?'ACTUALIZAR':'REGISTRAR';
+        toast('Error: '+err.message,'err');
+    }
+}
+window.guardarCuenta=guardarCuenta;
+
+function pedirEliminarCuenta(id,nombre){
+    pendingDelCuenta=id;
+    document.getElementById('confirmMsg').textContent='Se eliminará la cuenta bancaria de "'+nombre+'". Esta acción no se puede deshacer.';
+    document.getElementById('confirmOverlay').classList.add('open');
+    document.getElementById('confirmOkBtn').onclick=ejecutarEliminarCuenta;
+}
+window.pedirEliminarCuenta=pedirEliminarCuenta;
+
+async function ejecutarEliminarCuenta(){
+    if(!pendingDelCuenta) return; var id=pendingDelCuenta; cerrarConfirm();
+    try{await deleteDoc(doc(db,COL_CUENTAS,id));toast('Cuenta eliminada','warn');}
+    catch(err){toast('Error: '+err.message,'err');}
+    pendingDelCuenta=null;
+}
+
+function exportarCuentasExcel(){
+    if(!cuentasData.length){toast('No hay cuentas para exportar','warn');return;}
+    var rows=[['Apellidos y Nombres','Entidad Financiera','Número de Cuenta','CCI','Billetera Digital','Número']];
+    cuentasData.forEach(function(r){
+        rows.push([r.nombreCompleto,r.entidadFinanciera,r.numeroCuenta,r.cci,r.billeteraDigital,r.numero]);
+    });
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:26},{wch:30},{wch:20},{wch:22},{wch:22},{wch:15}];
+    XLSX.utils.book_append_sheet(wb,ws,'Cuentas');
+    XLSX.writeFile(wb,'CARZE_Cuentas_Bancarias.xlsx');
+    toast('Excel generado ✓','ok');
+}
+window.exportarCuentasExcel=exportarCuentasExcel;
 
 function cerrarSesion(){
         signOut(auth).then(function(){

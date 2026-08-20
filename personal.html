@@ -240,6 +240,11 @@ tbody td:last-child{padding-right:16px}
     </div>
   </div>
 
+  <div class="tabs-bar">
+    <button class="tab-btn active" id="tabBtnSCTR" onclick="cambiarTab('sctr')">📋 SCTR</button>
+    <button class="tab-btn" id="tabBtnCuentas" onclick="cambiarTab('cuentas')">🏦 Cuentas Bancarias</button>
+  </div>
+
   <div class="content">
 
   <div id="sctrAlertBanner"></div>
@@ -334,6 +339,54 @@ tbody td:last-child{padding-right:16px}
     </div>
 
   </div><!-- /viewSCTR -->
+
+  <!-- REGISTRO DE NÚMEROS DE CUENTA -->
+  <div id="viewCuentas" style="display:none">
+
+    <div class="section-head">
+      <div class="section-title">Registro de <span>Números de Cuenta</span></div>
+      <div class="section-actions">
+        <button class="btn btn-excel" onclick="exportarCuentasExcel()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar Excel
+        </button>
+        <button class="btn btn-primary" onclick="abrirModalCuenta()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva Cuenta
+        </button>
+      </div>
+    </div>
+
+    <div class="filtros-bar">
+      <div class="search-wrap">
+        <svg class="sicon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="buscarCuenta" placeholder="Buscar por nombre, entidad o billetera..." oninput="renderCuentas()">
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-hbar">
+        <span>Cuentas registradas</span>
+        <span class="tcount" id="cuentasCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>N</th><th>Apellidos y Nombres</th><th>Entidad Financiera</th>
+              <th>Número de Cuenta</th><th>CCI</th><th>Billetera Digital</th><th>Número</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="cuentasBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="cuentasEmptyState" style="display:none">
+        <span class="ei">🏦</span>
+        <span>Aún no hay cuentas registradas</span>
+      </div>
+    </div>
+
+  </div><!-- /viewCuentas -->
 
   </div>
 </div>
@@ -461,6 +514,64 @@ tbody td:last-child{padding-right:16px}
   <div class="modal-foot">
     <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
     <button class="btn-save" id="btnGuardar" onclick="guardar()"><span id="btnGuardarTxt">REGISTRAR</span></button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CUENTA BANCARIA -->
+<div class="overlay" id="overlayCuenta" onclick="if(event.target===this)cerrarModalCuenta()">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="modalCuentaTitle">Nueva <span>Cuenta Bancaria</span></h2>
+    <button class="modal-close" onclick="cerrarModalCuenta()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid-2">
+      <div class="fsec">🏦 Datos de la Cuenta</div>
+      <div class="frow" style="grid-column:1/-1">
+        <label>Apellidos y Nombres <span class="req">*</span></label>
+        <input class="finput" id="cNombre" list="listaNombresPersonal" placeholder="Ej: Ramírez García, Juan Carlos">
+        <datalist id="listaNombresPersonal"></datalist>
+      </div>
+      <div class="frow">
+        <label>Entidad Financiera</label>
+        <select class="fselect" id="cEntidad" onchange="toggleOtraEntidad()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="frow" id="rowOtraEntidad" style="display:none">
+        <label>Especificar entidad</label>
+        <input class="finput" id="cEntidadOtro" placeholder="Nombre de la entidad">
+      </div>
+      <div class="frow">
+        <label>Número de Cuenta</label>
+        <input class="finput" id="cNumeroCuenta" placeholder="Ej: 191-1234567-0-12">
+      </div>
+      <div class="frow">
+        <label>CCI</label>
+        <input class="finput" id="cCCI" placeholder="20 dígitos" maxlength="25" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="frow">
+        <label>Billetera Digital</label>
+        <select class="fselect" id="cBilletera" onchange="toggleOtraBilletera()">
+          <option value="">— Ninguna —</option>
+        </select>
+      </div>
+      <div class="frow" id="rowOtraBilletera" style="display:none">
+        <label>Especificar billetera</label>
+        <input class="finput" id="cBilleteraOtro" placeholder="Nombre de la billetera">
+      </div>
+      <div class="frow">
+        <label>Número (celular vinculado)</label>
+        <input class="finput" id="cNumero" placeholder="987654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="cerrarModalCuenta()">Cancelar</button>
+    <button class="btn-save" id="btnGuardarCuenta" onclick="guardarCuenta()"><span id="btnGuardarCuentaTxt">REGISTRAR</span></button>
   </div>
 </div>
 </div>
