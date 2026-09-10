@@ -1,0 +1,14 @@
+// ==========================================================================
+// AJUSTE A LAS REGLAS DE FIRESTORE — solo la línea de caja_config
+// --------------------------------------------------------------------------
+// Pegar esto en Firebase Console → Firestore Database → Reglas,
+// reemplazando únicamente la línea de "caja_config". El resto de tus
+// reglas (todas las demás colecciones, esUsuarioCarze(), el bloque de
+// "denegar por defecto") ya están bien y no hace falta tocarlas.
+// ==========================================================================
+
+// ANTES (permite escribir a cualquier usuario autenticado, no solo a los 4 de CARZE):
+// match /caja_config/{doc} { allow read; write: if request.auth != null; }
+
+// DESPUÉS (consistente con el resto de colecciones):
+match /caja_config/{doc} { allow read, write: if esUsuarioCarze(); }
